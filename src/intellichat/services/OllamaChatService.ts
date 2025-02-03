@@ -61,7 +61,9 @@ export default class OllamaChatService
         content: msg.reply,
       });
     });
+    console.log('Processing messages:', messages);
     for (const msg of messages) {
+      console.log('Processing message:', msg);
       if (msg.role === 'tool') {
         result.push({
           role: 'tool',
@@ -69,8 +71,24 @@ export default class OllamaChatService
           name: msg.name,
           tool_call_id: msg.tool_call_id,
         });
-      } else if (msg.role === 'assistant' && msg.tool_calls) {
-        result.push(msg);
+      } else if (msg.role === 'assistant') {
+        // Convert OpenAI tool_calls format to Ollama function format
+        console.log('Processing assistant:', msg);
+        if (msg.tool_calls && msg.tool_calls.length > 0) {
+          result.push({
+            role: 'assistant',
+            content: msg.content || '',
+            function: {
+              name: msg.tool_calls[0].function.name,
+              arguments: msg.tool_calls[0].function.arguments
+            }
+          });
+        } else {
+          result.push({
+            role: 'assistant',
+            content: msg.content || '',
+          });
+        }
       } else {
         const content = msg.content;
         if (typeof content === 'string') {
@@ -86,6 +104,7 @@ export default class OllamaChatService
         }
       }
     }
+    console.log('Final messages:', result);
     return result as IChatRequestMessage[];
   }
 
@@ -111,25 +130,57 @@ export default class OllamaChatService
     tool: ITool,
     toolResult: any
   ): IChatRequestMessage[] {
+    // Log the incoming tool object
+    console.log('Making tool messages for tool:', JSON.stringify(tool, null, 2));
+    
+    // Validate that tool has required properties
+    if (!tool || typeof tool !== 'object') {
+      throw new Error('Tool must be a valid object');
+    }
+    
+    // Create a deep copy of the entire tool to prevent mutations
+    const processedTool = structuredClone(tool);
+    
+    // Ensure args exists and is an object
+    if (!processedTool.args || typeof processedTool.args !== 'object') {
+      console.error('Invalid args format:', processedTool.args);
+      throw new Error('Tool args must be an object');
+    }
+    
+    console.log('Processed tool:', JSON.stringify(processedTool, null, 2));
+    
+    // Additional validation to ensure args weren't lost
+    if (Object.keys(processedTool.args).length === 0 && Object.keys(tool.args || {}).length > 0) {
+      console.error('Args were lost during processing:', {
+        original: tool.args,
+        processed: processedTool.args
+      });
+      throw new Error('Tool args were lost during processing');
+    }
+    
+    // Log the tool result
+    console.log('Tool result:', JSON.stringify(toolResult, null, 2));
+    
     return [
       {
         role: 'assistant',
+        content: '',  // Empty content when there's a tool call
         tool_calls: [
           {
-            id: tool.id,
+            id: processedTool.id,
             type: 'function',
             function: {
-              arguments: JSON.stringify(tool.args),
-              name: tool.name,
+              name: processedTool.name,
+              arguments: processedTool.args
             },
           },
         ],
       },
       {
         role: 'tool',
-        name: tool.name,
-        content: toolResult.content,
-        tool_call_id: tool.id,
+        name: processedTool.name,
+        content: typeof toolResult.content === 'string' ? toolResult.content : JSON.stringify(toolResult.content),
+        tool_call_id: processedTool.id,
       },
     ];
   }

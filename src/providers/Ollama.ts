@@ -45,7 +45,7 @@ export async function syncOllamaModels(base: string): Promise<Record<string, ICh
         group: 'Open Source',
         inputPrice: 0,
         outputPrice: 0,
-        toolEnabled: false,
+        toolEnabled: true
       };
     });
     cachedModels = models; // Update cached models
