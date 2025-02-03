@@ -60,7 +60,7 @@
 
 5. **Run the application:**
    ```bash
-   npm run dev
+   npm run start:renderer
    ```
 
 The application should now be running in development mode.
@@ -72,15 +72,14 @@ The application should now be running in development mode.
   - Local Ollama models auto-detection
   - Model selection via dropdown in chat UI
   - Basic integration with chat interface
-
-### 🔄 In Progress
-- **Improving Ollama Integration**
   - Tool support for private operations
 
-### 🚀 Planned Features
+### 🔄 In Progress
 - **MCP Improvements**
   - Add MCP via the frontend
   - Show tool input and output in the chat interface
+
+### 🚀 Planned Features
 - **Enhanced Model Compatibility**
   - Enhanced thinking model compatibility
 - **UI Improvements**
