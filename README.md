@@ -80,6 +80,7 @@ The application should now be running in development mode.
 ### 🚀 Planned Features
 - **MCP Improvements**
   - Add MCP via the frontend
+  - Show tool input and output in the chat interface
 - **Enhanced Model Compatibility**
   - Enhanced thinking model compatibility
 - **UI Improvements**
