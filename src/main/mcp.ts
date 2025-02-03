@@ -110,18 +110,27 @@ export default class ModuleContext {
 
   public async activate(config: IClientConfig): Promise<{ error: any }> {
     try {
-      const { key, command, args, env } = config;
-      const cmd =
-        command === 'npx'
-          ? process.platform === 'win32'
-            ? `${command}.cmd`
-            : command
-          : command;
+      const { key, command, args = [], env = {} } = config;
+      if (this.clients[key]) {
+        return { error: new Error('Client already exists') };
+      }
+      await this.importClient();
+      await this.importTransport();
+
       const mergedEnv = {
         ...getDefaultEnvironment(),
         ...env,
-        PATH: process.env.PATH,
       };
+
+      // Prepare spawn configuration
+      const spawnConfig = {
+        command,
+        args,
+        stderr: process.platform === 'win32' ? 'pipe' : 'inherit',
+        env: mergedEnv,
+        shell: process.platform === 'win32' ? true : false // Use shell on Windows to handle command extensions
+      };
+
       const client = new this.Client(
         {
           name: key,
@@ -131,12 +140,7 @@ export default class ModuleContext {
           capabilities: {},
         }
       );
-      const transport = new this.Transport({
-        command: cmd,
-        args,
-        stderr: process.platform === 'win32' ? 'pipe' : 'inherit',
-        env: mergedEnv,
-      });
+      const transport = new this.Transport(spawnConfig);
       await client.connect(transport);
       this.clients[key] = client;
       return { error: null };
