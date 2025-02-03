@@ -25,11 +25,34 @@ export default abstract class BaseReader implements IChatReader {
     }
 
     const toolCall = respMsg.toolCalls[0];
-    return {
+    console.log('BaseReader parsing tool call:', JSON.stringify(toolCall, null, 2));
+    
+    // Extract arguments and ensure they're an object
+    let args = toolCall.function?.arguments;
+    console.log('Raw args in BaseReader:', JSON.stringify(args, null, 2));
+    
+    // If args is a string, try to parse it as JSON
+    if (typeof args === 'string') {
+      try {
+        args = JSON.parse(args);
+        console.log('Parsed string args into:', JSON.stringify(args, null, 2));
+      } catch (e) {
+        console.error('Failed to parse arguments as JSON:', e);
+      }
+    }
+    
+    // Ensure args is a non-null object
+    const processedArgs = (typeof args === 'object' && args !== null) ? args : {};
+    console.log('Processed args in BaseReader:', JSON.stringify(processedArgs, null, 2));
+    
+    const result: ITool = {
       id: toolCall.id || '',
       name: toolCall.function?.name || '',
-      args: toolCall.function?.arguments || '',
+      args: processedArgs
     };
+    
+    console.log('BaseReader returning tool:', JSON.stringify(result, null, 2));
+    return result;
   }
 
   /**
@@ -179,12 +202,20 @@ export default abstract class BaseReader implements IChatReader {
 
       // Finalize tool arguments if a tool was being processed
       if (state.currentTool) {
-        state.currentTool.args = this.finalizeToolArguments(state.toolArguments);
+        console.log('Tool before finalization:', JSON.stringify(state.currentTool, null, 2));
+        if (state.toolArguments.length > 0) {
+          state.currentTool.args = this.finalizeToolArguments(state.toolArguments);
+        }
+        // Make sure we're not losing the args that were already there
+        if (!state.currentTool.args || Object.keys(state.currentTool.args).length === 0) {
+          console.warn('Tool args were empty after processing');
+        }
+        console.log('Final tool:', JSON.stringify(state.currentTool, null, 2));
       }
 
       return {
         content: state.content,
-        tool: state.currentTool,
+        tool: state.currentTool ? structuredClone(state.currentTool) : null,
         inputTokens: state.inputTokens,
         outputTokens: state.outputTokens,
       };
@@ -193,7 +224,7 @@ export default abstract class BaseReader implements IChatReader {
       onError(error);
       return {
         content: state.content,
-        tool: state.currentTool,
+        tool: state.currentTool ? structuredClone(state.currentTool) : null,
         inputTokens: state.inputTokens,
         outputTokens: state.outputTokens,
       };
@@ -286,14 +317,21 @@ export default abstract class BaseReader implements IChatReader {
     if (state.currentTool === null) {
       const tool = this.parseTools(response);
       if (tool) {
-        state.currentTool = tool;
+        console.log('Processing new tool in BaseReader:', JSON.stringify(tool, null, 2));
+        // Ensure we're not losing the args when setting currentTool
+        state.currentTool = structuredClone(tool);
+        console.log('Set currentTool in state:', JSON.stringify(state.currentTool, null, 2));
         callbacks.onToolCalls(tool.name);
         return;
       }
     }
 
     if (state.currentTool) {
-      this.processToolArguments(response, state);
+      // Only process additional arguments if they exist
+      const toolArgs = this.parseToolArgs(response);
+      if (toolArgs) {
+        this.processToolArguments(response, state);
+      }
     } else {
       this.processContentResponse(response, state, callbacks);
     }

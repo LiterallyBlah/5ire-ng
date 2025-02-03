@@ -135,6 +135,7 @@ export default class OpenAIChatService
     tool: ITool,
     toolResult: any
   ): IChatRequestMessage[] {
+    console.log('Making tool messages for tool:', JSON.stringify(tool, null, 2));
     return [
       {
         role: 'assistant',
