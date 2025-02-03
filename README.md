@@ -1,81 +1,107 @@
-<div align="center">
-  <a href="https://github.com/nanbingxyz/5ire">
+# 5ire-NG
+
+<p align="center">
+  <a href="https://github.com/LiterallyBlah/5ire-ng">
     <img src="https://5ire.app/logo.png" alt="Logo" width="120">
   </a>
   <br />
-   <h1>A Sleek AI Assistant & MCP Client</h1>
+   <h1>5ire AI Assistant with Ollama Integration</h1>
    <div>
-    <img src="https://badge.mcpx.dev/?type=client" />&nbsp;
-    <img src="https://badge.mcpx.dev/?type=client&features=tools" />
-     <img src="https://img.shields.io/badge/license-GNUv3-brightgreen.svg?style=flat"/>
+     <img src="https://img.shields.io/badge/licence-GNUv3-brightgreen.svg?style=flat"/>
      <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"/>
   </div>
-   <br />
-  <img src="https://github.com/user-attachments/assets/36ba3c32-6ebb-46d8-810f-df648243fbcc" style="width:100%"/>
   <br />
-  <p>
-    <br />
-    <div style="display:flex;justify-content:space-around;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:15px;">
-    <span style="font-size:12px;">OpenAI</span>
-    <span style="font-size:12px;">/ Azure OpenAI</span>
-    <span style="font-size:12px;">/ Anthropic</span>
-    <span style="font-size:12px;">/ Google</span>
-    <span style="font-size:12px;">/ Baidu</span>
-    <span style="font-size:12px;">/ Moonshot</span>
-    <span style="font-size:12px;">/ Doubao</span>
-    <span style="font-size:12px;">/ Grok</span>
-    <span style="font-size:12px;">/ DeepSeek</span>
-    <span style="font-size:12px;">/ Ollama</span>
-  </div>
-    <br />
-    <a href="https://x.com/intent/follow?screen_name=1ronben">Twitter</a>
-    ·
-    <a href="https://github.com/nanbingxyz/5ire/releases/latest">Releases</a>
-  </p>
-  <div><a href="https://buymeacoffee.com/ironben"><img src="https://github.com/user-attachments/assets/2265e2d6-2a17-4a48-b779-52a925261135" style="width:200px"/></a></div>
-   <br />
-<video src="https://github.com/user-attachments/assets/741b23d3-31df-4749-bde4-103e2d415953.mp4"></video>
-</div>
-<br />
+</p>
 
-# Features
+## 🚀 About 5ire-NG
+5ire-NG is a fork of the 5ire AI assistant that adds **local model support through Ollama integration**. Building upon the original [5ire](https://github.com/nanbingxyz/5ire), this version focuses on providing a seamless experience whilst working with local AI models.
 
-## ⚒️ Support Tools via MCP Servers
-MCP is an open protocol that standardizes how applications provide context to LLMs. Think of MCP like a USB-C port for AI applications. Just as USB-C provides a standardized way to connect your devices to various peripherals and accessories, MCP provides a standardized way to connect AI models to different data sources and tools.
+## 🎯 Features
 
-With tools, you can access the file system, obtain system information, interact with databases, access remote data, and more, rather than just having a simple conversation.
+### 🔄 Ollama Model Integration
+- **Auto-detection of local Ollama models** – no manual configuration required
+- **Simple model switching** via dropdown in the chat UI
+- **Streamlined chat experience** with local AI models
 
-> [!TIP]
-> 5ire is currently in the early stage, so custom MCP Servers are not open yet. However, you can add servers by modifying the `{userData}/5ire/mcp.json` configuration file (It should be  `~/Library/Application Support/5ire/mcp.json` on Mac). If there's any error, just delete the file, and 5ire will reset automatically. Feel free to explore!
+### 📖 Core 5ire Features
+- All the original features from 5ire, including:
+  - Conversation management
+  - Basic chat functionality
+  - Simple and intuitive UI
+  - Knowledge base
+  - Prompt library
+  - Many more models
+  - Bookmarks
 
-## 💡 Local Knowledge Base
-We have integrated the bge-m3 as our local embedding model, which excels in multilingual vectorization. 5ire now supports parsing and vectorization of docx, xlsx, pptx, pdf, txt, and csv documents, enabling storage of these vectors to power robust Retrieval-Augmented Generation (RAG) capabilities locally.
+## 📦 Development Installation
 
-![Local Knowledge Base Screenshot](https://5ire.app/knowledge.png)
+1. **Prerequisites:**
+   - Node.js (v18+) and npm
+   - Git
+   - For Windows: Visual Studio Code Build Tools
 
-## 📈 Usage Analytics
-By keeping track of your API usage and spending, you can gain a better understanding of how much you're spending on the API and make informed decisions to optimize your use of the service.
+2. **Clone the repository:**
+   ```bash
+   git clone https://github.com/LiterallyBlah/5ire-ng.git
+   cd 5ire-ng
+   ```
 
-![Usage Analytics Screenshot](https://5ire.app/analytics.png)
+3. **Set up environment variables:**
+   Create a `.env` file in the root directory with the following content:
+   ```
+   SUPA_PROJECT_ID="your-supabase-project-id"
+   SUPA_KEY="your-supabase-api-key"
+   ```
 
-## ✨ Prompts Library
-The prompt library provides an effective way to create and organize your own prompts. These prompts are highly versatile, thanks to their support for variables.
+4. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-![Prompts Library Screenshot](https://5ire.app/prompts.png)
+5. **Run the application:**
+   ```bash
+   npm run dev
+   ```
 
-## 🔖 Bookmarks
-You can bookmark each conversation, and even if the original messages are deleted, the saved bookmarked content remains unaffected.
-![Bookmarks Screenshot](https://5ire.app/bookmarks.png)
+The application should now be running in development mode.
 
-## 🔍 Quick Search
-You can perform keyword searches across all conversations, quickly pinpointing the information you need.
-![Search Screenshot](https://5ire.app/search.png)
+## 🛠️ Roadmap
 
+### ✅ Completed
+- **Ollama Model Integration**  
+  - Local Ollama models auto-detection
+  - Model selection via dropdown in chat UI
+  - Basic integration with chat interface
 
-> [!TIP]
-> Since 5ire uses native dependencies, it needs to be packaged on the corresponding platform. If it is on Mac OS, you may also need to configure APPLE_TEAM_ID, APPLE_ID, and APPLE_ID_PASS for notarization to avoid security alerts.
+### 🔄 In Progress
+- **Improving Ollama Integration**
+  - Tool support for private operations
 
+### 🚀 Planned Features
+- **MCP Improvements**
+  - Add MCP via the frontend
+- **Enhanced Model Compatibility**
+  - Enhanced thinking model compatibility
+- **UI Improvements**
+  - Enhanced model selection interface
+  - Better error feedback
+  - Improved chat experience
+  - Call tools directly from the chat interface (with a '/<tool\>')
+- **AI Agents**
+  - Add support for AI Agents
+  - Call agents in the chat interface
+- **Voice Integration**
+  - Add support for voice input and output
 
-# License
+## 🤝 Contributing
+Contributions are welcome! Feel free to submit PRs or issues to help improve the project.
 
-5ire is licensed under the GNU General Public License version 3.
+## 📝 Credits
+This project is based on [5ire](https://github.com/nanbingxyz/5ire). Credit goes to the original authors for their work on the initial AI assistant.
+
+## 📜 Licence
+5ire-NG is licensed under the **GNU General Public Licence v3.0**.
+
+---
+
+> **Note:** This project is currently in active development, focusing primarily on Ollama integration.
