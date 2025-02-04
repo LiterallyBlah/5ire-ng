@@ -41,6 +41,16 @@
    - Node.js (v18+) and npm
    - Git
    - For Windows: Visual Studio Code Build Tools
+   - npx (comes with Node.js/npm installation)
+   - uv package manager:
+     - macOS:
+       ```bash
+       brew install uv
+       ```
+     - Windows:
+       ```powershell
+       powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+       ```
 
 2. **Clone the repository:**
    ```bash
