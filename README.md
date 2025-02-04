@@ -43,14 +43,14 @@
    - For Windows: Visual Studio Code Build Tools
    - npx (comes with Node.js/npm installation)
    - uv package manager:
-     - macOS:
-       ```bash
-       brew install uv
-       ```
-     - Windows:
-       ```powershell
-       powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-       ```
+     # macOS
+     brew install uv
+
+     # Windows (PowerShell)
+     powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+     # Linux/WSL
+     curl -LsSf https://astral.sh/uv/install.sh | sh
 
 2. **Clone the repository:**
    ```bash
