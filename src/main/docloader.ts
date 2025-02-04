@@ -37,9 +37,15 @@ class OfficeLoader extends BaseLoader {
 
 class PdfLoader extends BaseLoader {
   async read(filePath: fs.PathLike): Promise<string> {
-    const dataBuffer = fs.readFileSync(filePath);
-    const data = await pdf(dataBuffer);
-    return data.text;
+    logging.info(`PdfLoader attempting to read file: ${filePath}`);
+    try {
+      const dataBuffer = fs.readFileSync(filePath);
+      const data = await pdf(dataBuffer);
+      return data.text;
+    } catch (error) {
+      logging.error(`PdfLoader error reading file: ${filePath}`, error);
+      throw error;
+    }
   }
 }
 
