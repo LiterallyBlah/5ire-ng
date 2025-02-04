@@ -29,6 +29,7 @@ export default function APISettings() {
   const [provider, setProvider] = useState<IServiceProvider>(
     Object.values(providers)[0]
   );
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const provider = getProvider(api.provider);
@@ -200,6 +201,7 @@ export default function APISettings() {
             <Button
               id="ollamaSync"
               onClick={async () => {
+                setIsSyncing(true);
                 try {
                   const api = useSettingsStore.getState().api;
                   const models = await syncOllamaModels(api.base);
@@ -211,11 +213,15 @@ export default function APISettings() {
                   console.log('Synced Ollama models:', models);
                 } catch (error) {
                   console.error('Failed to sync Ollama models:', error);
+                } finally {
+                  setIsSyncing(false);
                 }
               }}
+              disabled={isSyncing}
+              appearance="primary"
               className="w-50 latin"
             >
-              Sync Ollama Models
+              {isSyncing ? 'Syncing...' : 'Sync Ollama Models'}
             </Button>
           </div>
         )}

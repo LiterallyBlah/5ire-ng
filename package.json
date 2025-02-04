@@ -80,8 +80,6 @@
   },
   "dependencies": {
     "@lancedb/lancedb": "^0.14.1",
-    "better-sqlite3": "^11.8.1",
-    "electron-deeplink": "^1.0.10",
     "pdf-parse": "^1.1.1",
     "ts-node": "^10.9.2"
   },
@@ -203,9 +201,9 @@
     "update-electron-app": "^3.0.0",
     "url-loader": "^4.1.1",
     "valid-url": "^1.0.9",
-    "webpack": "^5.85.0",
+    "webpack": "^5.97.1",
     "webpack-bundle-analyzer": "^4.9.0",
-    "webpack-cli": "^5.1.1",
+    "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.0",
     "webpack-merge": "^5.9.0",
     "zustand": "^4.3.9"
