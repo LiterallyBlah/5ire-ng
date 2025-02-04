@@ -22,6 +22,8 @@
 - **Auto-detection of local Ollama models** – no manual configuration required
 - **Simple model switching** via dropdown in the chat UI
 - **Streamlined chat experience** with local AI models
+- **Dynamic tool support detection** (green indicator for supported tools)
+- **Sync button** for model state synchronisation
 
 ### 📖 Core 5ire Features
 - All the original features from 5ire, including:
@@ -71,7 +73,8 @@ The application should now be running in development mode.
 - **Ollama Model Integration**  
   - Local Ollama models auto-detection
   - Model selection via dropdown in chat UI
-  - Basic integration with chat interface
+  - Dynamic tool support detection (green indicator for supported tools)
+  - Sync button for model state synchronisation
   - Tool support for private operations
 
 ### 🔄 In Progress
