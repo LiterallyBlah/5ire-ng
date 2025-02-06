@@ -61,8 +61,8 @@ export default {
         description: `The Gemini 1.5 Flash-8B is a small model designed for tasks that require less intelligence.`,
         group: 'Gemini',
       },
-      'gemini-2.0-flash-exp': {
-        name: 'gemini-2.0-flash-exp',
+      'gemini-2.0-flash-001': {
+        name: 'gemini-2.0-flash-001',
         contextWindow: 1048576,
         maxTokens: 8192,
         inputPrice: 0.0000375,
@@ -75,18 +75,18 @@ export default {
         description: `Next generation features, superior speed, native tool use, and multimodal generation`,
         group: 'Gemini',
       },
-      'gemini-exp-1206': {
-        name: 'gemini-exp-1121',
+      'gemini-2.0-flash-lite-preview-02-05': {
+        name: 'gemini-2.0-flash-lite-preview-02-05',
         contextWindow: 1048576,
         maxTokens: 8192,
         inputPrice: 0.0000375,
         outputPrice: 0.00015,
         jsonModelEnabled: true,
         toolEnabled: true,
-        vision:{
-          enabled:true,
+        vision: {
+          enabled: true,
         },
-        description: `Quality improvements, celebrate 1 year of Gemini`,
+        description: `Preview of Gemini 2.0 Flash Lite, offering improved performance and efficiency for lightweight tasks`,
         group: 'Gemini',
       },
     },
