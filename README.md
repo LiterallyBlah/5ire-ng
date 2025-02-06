@@ -14,7 +14,7 @@
 </p>
 
 ## 🚀 About 5ire-NG
-5ire-NG is a fork of the 5ire AI assistant that adds **local model support through Ollama integration**. Building upon the original [5ire](https://github.com/nanbingxyz/5ire), this version focuses on providing a seamless experience whilst working with local AI models.
+5ire-NG is a fork of the 5ire AI assistant that adds **local model support through Ollama integration** along with other features below. Building upon the original [5ire](https://github.com/nanbingxyz/5ire), this version focuses on providing a seamless experience whilst working with local AI models and tools.
 
 ## 🎯 Features
 
@@ -94,6 +94,7 @@ The application should now be running in development mode.
 ### 🔄 In Progress (Weeks 1-3)
 - **Dradis MCP Integration**
   - Document Control
+  - Direct integration with 5ire-ng
 - **MCP Improvements**
   - Add MCP via the frontend
   - Show tool input and output in the chat interface
