@@ -90,11 +90,11 @@ The application should now be running in development mode.
   - Manage projects
   - Manage vulnerbailities
   - Manage Content Control
+  - Direct integration with 5ire-ng
 
 ### 🔄 In Progress (Weeks 1-3)
 - **Dradis MCP Integration**
   - Document Control
-  - Direct integration with 5ire-ng
 - **MCP Improvements**
   - Add MCP via the frontend
   - Show tool input and output in the chat interface
