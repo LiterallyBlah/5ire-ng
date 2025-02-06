@@ -11,35 +11,7 @@
      <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"/>
   </div>
   <br />
-<<<<<<< HEAD
 </p>
-=======
-  <p>
-    <br />
-    <div style="display:flex;justify-content:space-around;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:15px;">
-    <span style="font-size:12px;">OpenAI</span>
-    <span style="font-size:12px;">/ Azure</span>
-    <span style="font-size:12px;">/ Anthropic</span>
-    <span style="font-size:12px;">/ Google</span>
-    <span style="font-size:12px;">/ Baidu</span>
-    <span style="font-size:12px;">/ Mistral</span>
-    <span style="font-size:12px;">/ Moonshot</span>
-    <span style="font-size:12px;">/ Doubao</span>
-    <span style="font-size:12px;">/ Grok</span>
-    <span style="font-size:12px;">/ DeepSeek</span>
-    <span style="font-size:12px;">/ Ollama</span>
-  </div>
-    <br />
-    <a href="https://x.com/intent/follow?screen_name=1ronben">Twitter</a>
-    ·
-    <a href="https://github.com/nanbingxyz/5ire/releases/latest">Releases</a>
-  </p>
-  <div><a href="https://buymeacoffee.com/ironben"><img src="https://github.com/user-attachments/assets/2265e2d6-2a17-4a48-b779-52a925261135" style="width:200px"/></a></div>
-   <br />
-<video src="https://github.com/user-attachments/assets/741b23d3-31df-4749-bde4-103e2d415953.mp4"></video>
-</div>
-<br />
->>>>>>> upstream/main
 
 ## 🚀 About 5ire-NG
 5ire-NG is a fork of the 5ire AI assistant that adds **local model support through Ollama integration**. Building upon the original [5ire](https://github.com/nanbingxyz/5ire), this version focuses on providing a seamless experience whilst working with local AI models.
