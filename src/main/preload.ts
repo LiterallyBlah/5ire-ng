@@ -91,6 +91,9 @@ const electronHandler = {
   openExternal(url: string) {
     return ipcRenderer.invoke('open-external', url);
   },
+  getUserDataPath(paths?: string[]) {
+    return ipcRenderer.invoke('get-user-data-path', paths);
+  },
   db: {
     all<T>(sql: string, params: any | undefined = undefined): Promise<T[]> {
       return ipcRenderer.invoke('db-all', { sql, params });

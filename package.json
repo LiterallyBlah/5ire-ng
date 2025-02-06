@@ -1,7 +1,11 @@
 {
   "name": "5ire",
   "productName": "5ire",
+<<<<<<< HEAD
   "version": "0.10.1",
+=======
+  "version": "0.9.4",
+>>>>>>> upstream/main
   "description": "A Sleek Desktop AI Assistant & MCP Client",
   "main": "src/main/main.ts",
   "repository": "https://github.com/nanbingxyz/5ire.git",

@@ -92,6 +92,12 @@ export default class GoogleChatService
     const properties: any = {};
     for (const key in tool.inputSchema.properties) {
       const prop = tool.inputSchema.properties[key]
+      /**
+       * cause gemini-pro-vision not support additionalProperties
+       */
+      if(prop.items){
+        delete prop.items['additionalProperties']
+      }
       properties[key] = {
         type: prop.type,
         description: prop.description,

@@ -5,6 +5,7 @@ export type ProviderType =
   | 'Baidu'
   | 'Anthropic'
   | 'Moonshot'
+  | 'Mistral'
   | 'DeepSeek'
   | 'Ollama'
   | 'ChatBro'
@@ -23,7 +24,7 @@ export interface INumberRange {
 }
 
 export type ChatModelGroup =
-  | 'o1'
+  | 'O'
   | 'GPT-3.5'
   | 'GPT-4'
   | 'Gemini'
@@ -31,6 +32,10 @@ export type ChatModelGroup =
   | 'DeepSeek'
   | 'ERNIE'
   | 'Moonshot'
+  | 'Mistral'
+  | 'Ministral'
+  | 'Codestral'
+  | 'Pixtral'
   | 'Claude-3'
   | 'Claude-3.5'
   | 'Doubao-Pro'
@@ -49,6 +54,7 @@ export interface IChatModel {
   name: string;
   description?: string | null;
   maxTokens?: number | null;
+  defaultMaxTokens?: number | null;
   contextWindow: number | null;
   isDefault?: boolean;
   inputPrice: number;

@@ -7,27 +7,25 @@ const debug = Debug('5ire:intellichat:OpenAIReader');
 
 export default class OpenAIReader extends BaseReader implements IChatReader {
   protected parseReply(chunk: string): IChatResponseMessage {
-    // console.log('Parsing reply:', chunk);
-    const choice = JSON.parse(chunk).choices[0];
-    const result = {
+    const data = JSON.parse(chunk);
+    if (data.error) {
+      throw new Error(data.error.message);
+    }
+    const choice = data.choices[0];
+    return {
       content: choice.delta.content || '',
       isEnd: false,
       toolCalls: choice.delta.tool_calls,
     };
-    return result;
   }
 
   protected parseTools(respMsg: IChatResponseMessage): ITool | null {
-    // console.log('Parsing tools:', respMsg);
     if (respMsg.toolCalls && respMsg.toolCalls.length > 0) {
-      const tool = {
+      return {
         id: respMsg.toolCalls[0].id,
         name: respMsg.toolCalls[0].function.name,
       };
-      // console.log('Parsed tool:', tool);
-      return tool;
     }
-    // console.log('No tools found');
     return null;
   }
 
@@ -35,21 +33,17 @@ export default class OpenAIReader extends BaseReader implements IChatReader {
     index: number;
     args: string;
   } | null {
-    // console.log('Parsing tool args:', respMsg);
     try {
       if (respMsg.isEnd || !respMsg.toolCalls) {
-        console.log('No tool args to parse');
         return null;
       }
       const toolCalls = respMsg.toolCalls[0];
-      const result = {
+      return {
         index: toolCalls.index,
         args: toolCalls.function.arguments,
       };
-      console.log('Parsed tool args:', result);
-      return result;
     } catch (err) {
-      console.error('Error parsing tool args:', err);
+      console.error('parseToolArgs', err);
     }
     return null;
   }

@@ -23,7 +23,6 @@ export default abstract class BaseReader implements IChatReader {
     if (!respMsg.toolCalls || respMsg.toolCalls.length === 0) {
       return null;
     }
-
     const toolCall = respMsg.toolCalls[0];
     console.log('BaseReader parsing tool call:', JSON.stringify(toolCall, null, 2));
     
@@ -154,14 +153,14 @@ export default abstract class BaseReader implements IChatReader {
     isComplete: boolean;
   } {
     this.incompleteChunks.push(chunk);
-    
+
     // Keep only last 5 chunks
     if (this.incompleteChunks.length > 5) {
       this.incompleteChunks = this.incompleteChunks.slice(-5);
     }
 
     const combined = this.incompleteChunks.join('');
-    
+
     try {
       JSON.parse(combined);
       // Clear chunks if we successfully parsed
@@ -212,7 +211,6 @@ export default abstract class BaseReader implements IChatReader {
         }
         console.log('Final tool:', JSON.stringify(state.currentTool, null, 2));
       }
-
       return {
         content: state.content,
         tool: state.currentTool ? structuredClone(state.currentTool) : null,
@@ -257,7 +255,7 @@ export default abstract class BaseReader implements IChatReader {
 
       for (const line of lines) {
         const chunks = this.extractDataChunks(line);
-        
+
         for (const chunk of chunks) {
           if (chunk === '[DONE]') {
             isStreamDone = true;
@@ -322,10 +320,8 @@ export default abstract class BaseReader implements IChatReader {
         state.currentTool = structuredClone(tool);
         console.log('Set currentTool in state:', JSON.stringify(state.currentTool, null, 2));
         callbacks.onToolCalls(tool.name);
-        return;
       }
     }
-
     if (state.currentTool) {
       // Only process additional arguments if they exist
       const toolArgs = this.parseToolArgs(response);

@@ -8,6 +8,7 @@ import GoogleChatService from './GoogleChatService';
 import BaiduChatService from './BaiduChatService';
 import ChatBroChatService from './ChatBroChatService';
 import MoonshotChatService from './MoonshotChatService';
+import MistralChatService from './MistralChatService';
 import FireChatService from './FireChatService';
 import DoubaoChatService from './DoubaoChatService';
 import GrokChatService from './GrokChatService';
@@ -29,6 +30,8 @@ export default function createService(
       return new GoogleChatService(chatCtx);
     case 'Baidu':
       return new BaiduChatService(chatCtx);
+    case 'Mistral':
+      return new MistralChatService(chatCtx);
     case 'Moonshot':
       return new MoonshotChatService(chatCtx);
     case 'Ollama':

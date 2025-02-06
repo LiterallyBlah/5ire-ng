@@ -159,6 +159,20 @@ export default {
       isActive: false,
     },
     {
+      key: 'Tavily',
+      command: 'npx',
+      description:
+        'Tavily MCP Server',
+      args: [
+        '-y',
+        'tavily-mcp@0.1.2',
+      ],
+      "env": {
+        "TAVILY_API_KEY": "<apiKey:string:You can get the API key from https://tavily.com>"
+      },
+      isActive: false,
+    },
+    {
       key: 'Time',
       command: 'uvx',
       description:

@@ -5,19 +5,21 @@ import useChatStore from 'stores/useChatStore';
 import { useCallback, useEffect, useMemo } from 'react';
 import useMarkdown from 'hooks/useMarkdown';
 import MessageToolbar from './MessageToolbar';
-import { highlight } from '../../../utils/util';
+import {highlight } from '../../../utils/util';
 import { IChatMessage } from 'intellichat/types';
 import { useTranslation } from 'react-i18next';
 import { Divider } from '@fluentui/react-components';
 import useKnowledgeStore from 'stores/useKnowledgeStore';
 import useToast from 'hooks/useToast';
 import ToolSpinner from 'renderer/components/ToolSpinner';
+import useSettingsStore from 'stores/useSettingsStore';
 
 const debug = Debug('5ire:pages:chat:Message');
 
 export default function Message({ message }: { message: IChatMessage }) {
   const { t } = useTranslation();
   const { notifyInfo } = useToast();
+  const fontSize = useSettingsStore((state) => state.fontSize);
   const keywords = useChatStore((state: any) => state.keywords);
   const states = useChatStore().getCurState();
   const { showCitation } = useKnowledgeStore();
@@ -88,7 +90,9 @@ export default function Message({ message }: { message: IChatMessage }) {
       }
       return (
         <div
-          className="mt-1 break-all"
+          className={`mt-1 break-all ${
+            fontSize === 'large' ? 'font-lg' : ''
+          }`}
           dangerouslySetInnerHTML={{
             __html: render(
               `${
@@ -100,17 +104,14 @@ export default function Message({ message }: { message: IChatMessage }) {
       );
     }
     return (
-      <div className="mt-1">
-        <div
-          className="break-all"
-          dangerouslySetInnerHTML={{
-            __html: render(`${highlight(message.reply, keyword)}` || ''),
-          }}
-        />
-      </div>
+      <div
+        className={`mt-1 break-all ${fontSize === 'large' ? 'font-lg' : ''}`}
+        dangerouslySetInnerHTML={{
+          __html: render(`${highlight(message.reply, keyword)}` || ''),
+        }}
+      />
     );
-  }, [message, keyword, states]);
-
+  }, [message, keyword, states, fontSize]);
   return (
     <div className="leading-6 message" id={message.id}>
       <div>
@@ -125,7 +126,9 @@ export default function Message({ message }: { message: IChatMessage }) {
         >
           <div className="avatar flex-shrink-0 mr-2" />
           <div
-            className="mt-1 break-all"
+            className={`mt-1 break-all ${
+              fontSize === 'large' ? 'font-lg' : ''
+            }`}
             dangerouslySetInnerHTML={{
               __html: render(highlight(message.prompt, keyword) || ''),
             }}

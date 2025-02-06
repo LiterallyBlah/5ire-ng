@@ -85,16 +85,16 @@ export default function useChatContext(): IChatContext{
       const { chat } = useChatStore.getState();
       const { api } = useSettingsStore.getState();
       const model = getModel();
-      let maxTokens = model.maxTokens || null;
+      let maxTokens = model.defaultMaxTokens || model.maxTokens;
       const prompt = useStageStore.getState().getPrompt(chat.id);
       if (prompt?.maxTokens != null && isValidMaxTokens(prompt?.maxTokens, api.provider, model.name)) {
-        maxTokens = prompt?.maxTokens as number | null;
+        maxTokens = prompt?.maxTokens || prompt?.maxTokens as number;
       }
       if (chat?.maxTokens != null && isValidMaxTokens(chat?.maxTokens, api.provider, model.name)) {
-        maxTokens = chat?.maxTokens as number | null;
+        maxTokens = chat?.maxTokens as number;
       }
       // debug(`Chat(${chat.id}):getMaxTokens: ${maxTokens}`);
-      return maxTokens;
+      return maxTokens as number;
     };
 
     const getChatContext = () => {

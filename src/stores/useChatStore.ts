@@ -107,12 +107,11 @@ const useChatStore = create<IChatStore>((set, get) => ({
     const $chat = {
       model: api.model,
       temperature: getProvider(api.provider).chat.temperature.default,
-      maxTokens: getChatModel(api.provider, api.model).maxTokens,
+      maxTokens: null,
       maxCtxMessages: NUM_CTX_MESSAGES,
       ...chat,
       id: tempChatId,
     } as IChat;
-    editStage($chat.id, { input: '', prompt: null });
     debug('Init a chat', $chat);
     set({ chat: $chat, messages: [] });
     return $chat;

@@ -200,6 +200,13 @@ ipcMain.handle('open-external', (_, data) => {
   shell.openExternal(data);
 });
 
+ipcMain.handle('get-user-data-path', (_, paths) => {
+  if(paths){
+    return path.join(app.getPath('userData'), ...paths);
+  }
+  return app.getPath('userData');
+});
+
 ipcMain.handle('set-native-theme', (_, theme: 'light' | 'dark' | 'system') => {
   nativeTheme.themeSource = theme;
 });
@@ -365,7 +372,7 @@ ipcMain.handle('select-image-with-base64', async () => {
 ipcMain.handle(
   'search-knowledge',
   async (_, collectionIds: string[], query: string) => {
-    const result = await Knowledge.search(collectionIds, query, { limit: 3 });
+    const result = await Knowledge.search(collectionIds, query, { limit: 4 });
     return JSON.stringify(result);
   }
 );

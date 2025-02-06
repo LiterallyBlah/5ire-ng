@@ -1,6 +1,10 @@
 {
   "name": "5ire",
+<<<<<<< HEAD
   "version": "0.10.1",
+=======
+  "version": "0.9.4",
+>>>>>>> upstream/main
   "description": "A Sleek Desktop AI Assistant & MCP Client",
   "license": "GPL-3.0-only",
   "author": {

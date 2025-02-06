@@ -1,20 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Empty from 'renderer/components/Empty';
 import TooltipIcon from 'renderer/components/TooltipIcon';
-import useMCPStore, { IMCPServer } from 'stores/useMCPStore';
+import useMCPStore from 'stores/useMCPStore';
 import Grid from './Grid';
-import { MessageBar, MessageBarBody } from '@fluentui/react-components';
+import { Button } from '@fluentui/react-components';
+import NewButton from './NewButton';
 
 export default function Tools() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(false);
   const remoteConfig = useMCPStore((state) => state.remoteConfig);
   const config = useMCPStore((state) => state.config);
   const activeServerNames = useMCPStore((state) => state.activeServerNames);
 
   const loadConfig = async () => {
-    setLoading(true);
     try {
       await Promise.all([
         useMCPStore.getState().fetchConfig(),
@@ -23,8 +22,6 @@ export default function Tools() {
       ]);
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -59,6 +56,9 @@ export default function Tools() {
         <div className="flex flex-col items-start w-full">
           <div className="flex justify-between items-baseline w-full">
             <h1 className="text-2xl flex-shrink-0 mr-6">{t('Common.Tools')}</h1>
+            <div className="flex justify-end w-full items-center gap-2">
+              <NewButton />
+            </div>
           </div>
           <div className="tips flex justify-start items-center">
             {t('Common.MCPServers')}
