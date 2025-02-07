@@ -184,20 +184,20 @@ export default abstract class NextCharService {
         this.outputTokens += readResult.outputTokens;
       }
       if (readResult.tool) {
-        console.log('Tool from reader:', JSON.stringify(readResult.tool, null, 2));
+        // console.log('Tool from reader:', JSON.stringify(readResult.tool, null, 2));
         
         const [client, name] = readResult.tool.name.split('--');
         // Create a deep copy of the tool to prevent mutations
         const toolForMessages = structuredClone(readResult.tool);
         
-        console.log('Calling MCP with args:', JSON.stringify(readResult.tool.args, null, 2));
+        // console.log('Calling MCP with args:', JSON.stringify(readResult.tool.args, null, 2));
         const toolCallsResult = await window.electron.mcp.callTool({
           client,
           name,
           args: readResult.tool.args,
         });
         
-        console.log('Tool for makeToolMessages:', JSON.stringify(toolForMessages, null, 2));
+        // console.log('Tool for makeToolMessages:', JSON.stringify(toolForMessages, null, 2));
         const _messages = [
           ...messages,
           ...this.makeToolMessages(toolForMessages, toolCallsResult),

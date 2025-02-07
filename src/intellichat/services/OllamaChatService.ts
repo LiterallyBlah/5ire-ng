@@ -61,9 +61,9 @@ export default class OllamaChatService
         content: msg.reply,
       });
     });
-    console.log('Processing messages:', messages);
+    // console.log('Processing messages:', messages);
     for (const msg of messages) {
-      console.log('Processing message:', msg);
+      // console.log('Processing message:', msg);
       if (msg.role === 'tool') {
         result.push({
           role: 'tool',
@@ -73,7 +73,7 @@ export default class OllamaChatService
         });
       } else if (msg.role === 'assistant') {
         // Convert OpenAI tool_calls format to Ollama function format
-        console.log('Processing assistant:', msg);
+        // console.log('Processing assistant:', msg);
         if (msg.tool_calls && msg.tool_calls.length > 0) {
           result.push({
             role: 'assistant',
@@ -104,7 +104,7 @@ export default class OllamaChatService
         }
       }
     }
-    console.log('Final messages:', result);
+    // console.log('Final messages:', result);
     return result as IChatRequestMessage[];
   }
 
@@ -131,7 +131,7 @@ export default class OllamaChatService
     toolResult: any
   ): IChatRequestMessage[] {
     // Log the incoming tool object
-    console.log('Making tool messages for tool:', JSON.stringify(tool, null, 2));
+    // console.log('Making tool messages for tool:', JSON.stringify(tool, null, 2));
     
     // Validate that tool has required properties
     if (!tool || typeof tool !== 'object') {
@@ -147,7 +147,7 @@ export default class OllamaChatService
       throw new Error('Tool args must be an object');
     }
     
-    console.log('Processed tool:', JSON.stringify(processedTool, null, 2));
+    // console.log('Processed tool:', JSON.stringify(processedTool, null, 2));
     
     // Additional validation to ensure args weren't lost
     if (Object.keys(processedTool.args).length === 0 && Object.keys(tool.args || {}).length > 0) {
@@ -159,7 +159,7 @@ export default class OllamaChatService
     }
     
     // Log the tool result
-    console.log('Tool result:', JSON.stringify(toolResult, null, 2));
+    // console.log('Tool result:', JSON.stringify(toolResult, null, 2));
     
     return [
       {
@@ -201,7 +201,7 @@ export default class OllamaChatService
         const _tools = tools
           .filter((tool: any) => !this.usedToolNames.includes(tool.name))
           .map((tool: any) => {
-            console.log(tool);
+            // console.log(tool);
             return this.makeTool(tool);
           });
         if (_tools.length > 0) {
@@ -222,7 +222,7 @@ export default class OllamaChatService
   ): Promise<Response> {
     const payload = await this.makePayload(messages);
     debug('Send Request, payload:\r\n', payload);
-    console.log('Send Request, payload:\r\n', payload);
+    // console.log('Send Request, payload:\r\n', payload);
     const { base } = this.apiSettings;
     const response = await fetch(`${base}/api/chat`, {
       method: 'POST',
@@ -232,7 +232,7 @@ export default class OllamaChatService
       body: JSON.stringify(payload),
       signal: this.abortController.signal,
     });
-    console.log('Response:\r\n', response);
+    // console.log('Response:\r\n', response);
     return response;
   }
 }

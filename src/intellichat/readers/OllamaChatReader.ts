@@ -7,55 +7,60 @@ const debug = Debug('5ire:intellichat:OllamaReader');
 
 export default class OllamaReader extends BaseReader implements IChatReader {
   protected parseReply(chunk: string): IChatResponseMessage {
-    console.log('Raw chunk:', chunk);
+    // console.log('Raw chunk:', chunk);
     let data;
     try {
       data = JSON.parse(chunk);
     } catch (e) {
-      console.error('Failed to parse JSON:', e);
-      console.log('Invalid chunk:', chunk);
+      // console.error('Failed to parse JSON:', e);
+      // console.log('Invalid chunk:', chunk);
       return {
         content: '',
         isEnd: false
       };
     }
     
-    console.log('Parsed data:', data);
+    // console.log('Parsed data:', data);
     if (data.done) {
-      console.log('Response (done):\r\n', data);
-      // Handle tool calls in the final response
+      // console.log('Response (done):\r\n', data);
       let toolCalls;
       if (data.message?.tool_calls) {
-        console.log('Tool calls from message:', data.message.tool_calls);
+        // console.log('Tool calls from message:', data.message.tool_calls);
         toolCalls = data.message.tool_calls.map((call: any, index: number) => {
-          // Extract the actual arguments from the function call
           const args = call.function.arguments;
-          console.log('Raw args from function:', args);
-
-          console.log('Stringified args:', JSON.stringify(args))
-          
-          console.log('Constructing tool call:', {
-            id: `${Date.now()}-${index}`,
-            type: 'function',
-            function: {
-              name: call.function.name,
-              arguments: args
+          // Handle both string and object arguments
+          let parsedArgs = args;
+          if (typeof args === 'string') {
+            try {
+              parsedArgs = JSON.parse(args);
+            } catch (e) {
+              debug('Failed to parse arguments as JSON:', e);
+              debug('Using original string args:', args);
             }
-          });
+          }
+          // console.log('Raw args from function:', args);
+          // console.log('Stringified args:', JSON.stringify(args))
+          // console.log('Constructing tool call:', {
+          //   id: `${Date.now()}-${index}`,
+          //   type: 'function',
+          //   function: {
+          //     name: call.function.name,
+          //     arguments: args
+          //   }
+          // });
           return {
             id: `${Date.now()}-${index}`,
             type: 'function',
             function: {
               name: call.function.name,
-              arguments: args
+              arguments: parsedArgs
             }
           };
         });
       } else if (data.message?.function) {
-        // Handle legacy function format
-        console.log('Function from message:', data.message.function);
+        // console.log('Function from message:', data.message.function);
         const args = data.message.function.arguments;
-        console.log('Raw args from function:', args);
+        // console.log('Raw args from function:', args);
         
         toolCalls = [{
           id: Date.now().toString(),
@@ -85,40 +90,33 @@ export default class OllamaReader extends BaseReader implements IChatReader {
   protected parseTools(respMsg: IChatResponseMessage): ITool | null {
     if (respMsg.toolCalls && respMsg.toolCalls.length > 0) {
       const toolCall = respMsg.toolCalls[0];
-      console.log('Parsing tool call in parseTools:', JSON.stringify(toolCall, null, 2));
+      // console.log('Parsing tool call in parseTools:', JSON.stringify(toolCall, null, 2));
       
-      // Extract arguments and parse them if they're a string
       let args = toolCall.function?.arguments;
-      console.log('Raw args in parseTools:', JSON.stringify(args, null, 2));
+      // console.log('Raw args in parseTools:', JSON.stringify(args, null, 2));
       
-      // If args is a string, try to parse it as JSON
       if (typeof args === 'string') {
         try {
           args = JSON.parse(args);
-          console.log('Parsed string args into:', JSON.stringify(args, null, 2));
+          // console.log('Parsed string args into:', JSON.stringify(args, null, 2));
         } catch (e) {
-          console.error('Failed to parse arguments as JSON:', e);
-          // If parsing fails, keep the original string
-          console.log('Keeping original string args:', args);
+          // console.error('Failed to parse arguments as JSON:', e);
+          // console.log('Keeping original string args:', args);
         }
       }
       
-      // Ensure args is a non-null object
       const processedArgs = (typeof args === 'object' && args !== null) ? args : {};
       
-      // Create the tool result with guaranteed non-null args
       const result: ITool = {
         id: toolCall.id || '',
         name: toolCall.function?.name || '',
         args: processedArgs
       };
       
-      // Log the final result with stringification to capture the exact state
-      console.log('Final ITool object:', JSON.stringify(result, null, 2));
+      // console.log('Final ITool object:', JSON.stringify(result, null, 2));
       
-      // Additional validation to ensure args weren't lost
       if (!result.args || Object.keys(result.args).length === 0) {
-        console.warn('Warning: Tool args are empty after processing');
+        // console.warn('Warning: Tool args are empty after processing');
       }
       
       return result;
@@ -132,15 +130,17 @@ export default class OllamaReader extends BaseReader implements IChatReader {
     args: string;
   } | null {
     if (!respMsg.toolCalls || respMsg.toolCalls.length === 0) {
-      console.log('No tool args to parse');
       return null;
     }
     const toolCall = respMsg.toolCalls[0];
-    console.log('Parsing tool args in parseToolArgs:', toolCall);
-    console.log('Tool args:', toolCall.function?.arguments);
+    const args = toolCall.function?.arguments;
+    
+    // Convert object arguments to string if necessary
+    const stringArgs = typeof args === 'object' ? JSON.stringify(args) : args || '';
+    
     return {
       index: 0,
-      args: toolCall.function?.arguments || '',
+      args: stringArgs,
     };
   }
 
