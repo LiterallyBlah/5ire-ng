@@ -51,7 +51,18 @@ export default class OllamaChatService
         content: systemMessage,
       });
     }
-    this.context.getCtxMessages().forEach((msg: IChatMessage) => {
+
+    // Get context messages and verify no tool messages slip through
+    const contextMessages = this.context.getCtxMessages();
+    const hasToolMessages = contextMessages.some(msg => 
+      msg.isTool || msg.toolCall || msg.toolResponse
+    );
+    
+    if (hasToolMessages) {
+      debug('Warning: Tool messages found in context, this should not happen');
+    }
+
+    contextMessages.forEach((msg: IChatMessage) => {
       result.push({
         role: 'user',
         content: msg.prompt,
@@ -61,6 +72,7 @@ export default class OllamaChatService
         content: msg.reply,
       });
     });
+
     // console.log('Processing messages:', messages);
     for (const msg of messages) {
       // console.log('Processing message:', msg);
@@ -195,6 +207,17 @@ export default class OllamaChatService
       temperature: this.context.getTemperature(),
       stream: false,
     };
+
+    // Log the context messages being sent
+    console.log('Context being sent to LLM:', {
+      systemMessage: this.context.getSystemMessage(),
+      contextMessages: this.context.getCtxMessages(),
+      currentMessages: await this.makeMessages(message),
+      temperature: this.context.getTemperature(),
+      model: this.getModelName(),
+      maxTokens: this.context.getMaxTokens()
+    });
+
     if (model.toolEnabled) {
       const tools = await window.electron.mcp.listTools();
       if (tools) {

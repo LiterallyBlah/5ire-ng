@@ -12,9 +12,17 @@
 
 [data-theme='light'] {
   @include meta.load-css('highlight.js/styles/atom-one-light');
+  --color-bg-code: #f6f8fa;
+  --color-text-code: #24292e;
+  --color-bg-tool: #f0f2f5;
+  --color-text-tool: #1f2937;
 }
 [data-theme='dark'] {
   @include meta.load-css('highlight.js/styles/atom-one-dark');
+  --color-bg-code: #2a2a2a;
+  --color-text-code: #e1e1e1;
+  --color-bg-tool: #2d3748;
+  --color-text-tool: #e2e8f0;
 }
 
 @font-face {

@@ -14,6 +14,7 @@ import useToast from 'hooks/useToast';
 import ToolSpinner from 'renderer/components/ToolSpinner';
 import useSettingsStore from 'stores/useSettingsStore';
 import ErrorBoundary from 'renderer/components/ErrorBoundary';
+import ToolInteraction from 'renderer/components/ToolInteraction';
 
 const debug = Debug('5ire:pages:chat:Message');
 
@@ -49,7 +50,11 @@ const SafeJSONParse = (jsonString: string | null | undefined | any, defaultValue
   }
 };
 
-export default function Message({ message }: { message: IChatMessage }) {
+export default function Message({ message }: { 
+  message: IChatMessage & { 
+    toolInteractions?: { call: IChatMessage; response: IChatMessage; }[] 
+  } 
+}) {
   const { t } = useTranslation();
   const { notifyInfo } = useToast();
   const fontSize = useSettingsStore((state) => state.fontSize);
@@ -113,67 +118,49 @@ export default function Message({ message }: { message: IChatMessage }) {
   }, [message.isActive, registerCitationClick]);
 
   const replyNode = useCallback(() => {
-    if (message.isTool) {
-      if (message.toolCall) {
-        return (
-          <div className="tool-call-content">
-            <code className="block bg-gray-100 p-2 rounded">
-              {JSON.stringify(message.toolCall, null, 2)}
-            </code>
-          </div>
-        );
-      }
-      if (message.toolResponse) {
-        return (
-          <div className="tool-response-content">
-            <code className="block bg-gray-100 p-2 rounded">
-              {JSON.stringify(message.toolResponse.content, null, 2)}
-            </code>
-          </div>
-        );
-      }
-    }
-
-    // Regular message handling...
+    // Show loader for active messages
     if (message.isActive && states.loading) {
-      if (!message.reply || message.reply === '') {
-        return (
-          <div className="w-full mt-1.5">
-            {states.runningTool && (
-              <div className="flex flex-row justify-start items-center gap-1">
-                <ToolSpinner size={20} style={{ marginBottom: '-3px' }} />
-                <span>{states.runningTool}</span>
-              </div>
-            )}
-            <span className="skeleton-box" style={{ width: '80%' }} />
-            <span className="skeleton-box" style={{ width: '90%' }} />
-          </div>
-        );
-      }
       return (
-        <div
-          className={`mt-1 break-all ${
-            fontSize === 'large' ? 'font-lg' : ''
-          }`}
-          dangerouslySetInnerHTML={{
-            __html: render(
-              `${
-                highlight(message.reply, keyword) || ''
-              }<span class="blinking-cursor" /></span>`
-            ),
-          }}
-        />
+        <div className="w-full mt-1.5">
+          {states.runningTool && (
+            <div className="flex flex-row justify-start items-center gap-1">
+              <ToolSpinner size={20} style={{ marginBottom: '-3px' }} />
+              <span>{states.runningTool}</span>
+            </div>
+          )}
+          <span className="skeleton-box" style={{ width: '80%' }} />
+          <span className="skeleton-box" style={{ width: '90%' }} />
+        </div>
       );
     }
+
     return (
-      <div
-        className={`mt-1 break-all ${fontSize === 'large' ? 'font-lg' : ''}`}
-        dangerouslySetInnerHTML={{
-          __html: render(`${highlight(message.reply, keyword)}` || ''),
-        }}
-      />
+      <div className="msg-reply-content">
+        {/* Main reply content */}
+        <div
+          className={`mt-1 break-all ${fontSize === 'large' ? 'font-lg' : ''}`}
+          dangerouslySetInnerHTML={{
+            __html: render(`${highlight(message.reply, keyword)}` || ''),
+          }}
+        />
+        
+        {/* Tool interactions */}
+        {message.toolInteractions && message.toolInteractions.length > 0 && (
+          <div className="tool-interactions mt-4">
+            {/* <Divider>{t('Common.ToolInteractions')}</Divider> */}
+            {message.toolInteractions.map((interaction, index) => (
+              <ToolInteraction 
+                key={`${message.id}-tool-${index}`}
+                toolCall={interaction.call}
+                toolResponse={interaction.response}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     );
-  }, [message, keyword, states, fontSize]);
+  }, [message, keyword, fontSize, states, render, t]);
+
   return (
     <ErrorBoundary>
       <div className="leading-6 message" id={message.id}>
@@ -198,14 +185,12 @@ export default function Message({ message }: { message: IChatMessage }) {
             />
           </div>
         </div>
-        <div>
-          <a id={`#reply-${message.id}`} aria-label={`Reply ${message.id}`} />
-          <div
-            className="msg-reply mt-2 flex flex-start"
-            style={{ minHeight: '40px' }}
-          >
+        <div className="msg-reply mt-2">
+          <div className="flex flex-start" style={{ minHeight: '40px' }}>
             <div className="avatar flex-shrink-0 mr-2" />
-            {replyNode()}
+            <div className="flex-grow">
+              {replyNode()}
+            </div>
           </div>
           {citedFiles.length > 0 && (
             <div className="message-cited-files mt-2">

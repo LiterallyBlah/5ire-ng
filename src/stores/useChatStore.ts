@@ -48,6 +48,16 @@ const ensureValidJson = (value: any, defaultValue: any = null): string => {
   }
 };
 
+const validateJson = (value: any): string | null => {
+  if (!value) return null;
+  try {
+    return typeof value === 'string' ? value : JSON.stringify(value);
+  } catch (e) {
+    console.error('[validateJson] Failed to stringify JSON:', e);
+    return null;
+  }
+};
+
 const standardizeToolResponse = (response: any): string | null => {
   if (!response) return null;
   try {
@@ -373,7 +383,9 @@ const useChatStore = create<IChatStore>((set, get) => ({
       chatId: message.chatId,
       systemMessage: message.systemMessage || null,
       prompt: message.prompt || '',
-      reply: message.reply || '',
+      reply: message.isTool && message.toolResponse 
+        ? JSON.stringify(message.toolResponse.content, null, 2)  // Format tool response as reply
+        : message.reply || '',
       model: message.model || '',
       temperature: message.temperature || 0,
       maxTokens: message.maxTokens || null,
@@ -530,7 +542,22 @@ const useChatStore = create<IChatStore>((set, get) => ({
   updateMessage: async (message: { id: string } & Partial<IChatMessage>) => {
     const msg = { id: message.id } as IChatMessage;
     const stats: string[] = [];
-    const params: (string | number)[] = [];
+    const params: (string | number | null)[] = [];
+
+    // Handle reply/toolResponse coordination
+    if (!isNil(message.toolResponse)) {
+      stats.push('toolResponse = json(?)', 'reply = ?');
+      msg.toolResponse = message.toolResponse;
+      params.push(
+        standardizeToolResponse(message.toolResponse),
+        JSON.stringify(message.toolResponse.content, null, 2)  // Format tool response as reply
+      );
+    } else if (isNotBlank(message.reply)) {
+      stats.push('reply = ?');
+      msg.reply = message.reply as string;
+      params.push(msg.reply);
+    }
+
     if (isNotBlank(message.prompt)) {
       stats.push('prompt = ?');
       msg.prompt = message.prompt as string;
@@ -581,6 +608,25 @@ const useChatStore = create<IChatStore>((set, get) => ({
       msg.citedChunks = message.citedChunks as string;
       params.push(msg.citedChunks);
     }
+    // Add tool-specific field handling
+    if (!isNil(message.toolCall)) {
+      stats.push('toolCall = json(?)');
+      msg.toolCall = message.toolCall;
+      params.push(ensureValidJson(message.toolCall));
+    }
+    
+    if (!isNil(message.toolResponse)) {
+      stats.push('toolResponse = json(?)');
+      msg.toolResponse = message.toolResponse;
+      params.push(standardizeToolResponse(message.toolResponse));
+    }
+    
+    if (!isNil(message.isTool)) {
+      stats.push('isTool = ?');
+      msg.isTool = message.isTool;
+      params.push(message.isTool ? 1 : 0);
+    }
+
     if (message.id && stats.length) {
       params.push(msg.id);
       await window.electron.db.run(
@@ -595,7 +641,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
           }
         })
       );
-      console.log('Update message ', JSON.stringify(msg));
+      console.log('[updateMessage] Updated message with tool data:', JSON.stringify(msg));
       return true;
     }
     return false;

@@ -11,6 +11,7 @@ import { isValidMaxTokens, isValidTemperature } from 'intellichat/validators';
 import useProvider from './useProvider';
 import { IChat, IChatContext, IChatMessage } from 'intellichat/types';
 import { IChatModel } from 'providers/types';
+import { filterToolMessages, isToolMessage } from 'utils/messageUtils';
 
 const debug = Debug('5ire:hooks:useChatContext');
 
@@ -120,10 +121,15 @@ export default function useChatContext(): IChatContext{
       const maxCtxMessages = isNumber(chat?.maxCtxMessages)
         ? chat?.maxCtxMessages
         : NUM_CTX_MESSAGES;
+      
       if (maxCtxMessages > 0) {
         const messages = useChatStore.getState().messages || [];
-        // Filter out tool messages before slicing
-        const nonToolMessages = messages.filter(msg => !msg.isTool);
+        const nonToolMessages = filterToolMessages(messages);
+        
+        debug(
+          `Filtered ${messages.length - nonToolMessages.length} tool messages from context`
+        );
+        
         if (nonToolMessages.length <= maxCtxMessages) {
           ctxMessages = nonToolMessages.slice(0, -1);
         } else {
@@ -132,7 +138,16 @@ export default function useChatContext(): IChatContext{
             nonToolMessages.length - 1
           );
         }
+
+        // Extra validation in development
+        if (process.env.NODE_ENV === 'development') {
+          const hasToolMessages = ctxMessages.some(isToolMessage);
+          if (hasToolMessages) {
+            console.warn('Tool messages found after filtering - this should not happen');
+          }
+        }
       }
+      
       return ctxMessages;
     };
 
