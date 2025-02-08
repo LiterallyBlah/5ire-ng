@@ -427,6 +427,11 @@ ipcMain.handle('mcp-get-active-servers', () => {
   return mcp.getClientNames();
 });
 
+// Add this new IPC handler
+ipcMain.handle('get-user-data-path', (_, segments: string[] = []) => {
+  return path.join(app.getPath('userData'), ...segments);
+});
+
 ipcMain.on('show-error-box', (_, { title, content }) => {
   dialog.showErrorBox(title, content);
 });

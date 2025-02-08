@@ -5,7 +5,6 @@ declare global {
   interface Window {
     electron: ElectronHandler;
     envVars: EnvVars;
-
   }
 }
 

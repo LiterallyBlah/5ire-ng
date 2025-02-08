@@ -153,6 +153,8 @@ const electronHandler = {
   setNativeTheme: (theme: 'light' | 'dark' | 'system') =>
     ipcRenderer.invoke('set-native-theme', theme),
   ingestEvent: (data: any) => ipcRenderer.invoke('ingest-event', data),
+  getUserDataPath: (segments: string[] = []) =>
+    ipcRenderer.invoke('get-user-data-path', segments),
   ipcRenderer: {
     sendMessage(channel: Channels, ...args: unknown[]) {
       ipcRenderer.send(channel, ...args);
