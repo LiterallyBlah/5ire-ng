@@ -21,7 +21,10 @@ export default function ToolInteraction({ toolCall, toolResponse }: ToolInteract
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center text-sm w-full justify-start"
       >
-        <Text>{toolName}</Text>
+        <div className="flex items-center">
+          <span className="mr-2">🔧</span>
+          <Text>{toolName}</Text>
+        </div>
       </Button>
       
       {isExpanded && (
