@@ -49,8 +49,8 @@ export async function syncOllamaModels(base: string): Promise<Record<string, ICh
           body: JSON.stringify({
             model: model.name,
             messages: [{ role: 'user', content: 'What is the current time?' }],
-            temperature: 0.7,
-            stream: false,
+            temperature: 0.5,
+            stream: true,
             tools: [
               {
                 type: 'function',

@@ -13,6 +13,8 @@ import useStageStore from 'stores/useStageStore';
 import Toolbar from './Toolbar';
 import Spinner from '../../../components/Spinner';
 import { removeTagsExceptImg, setCursorToEnd } from 'utils/util';
+import { IStage } from 'intellichat/types';
+import { debounce } from 'lodash';
 
 export default function Editor({
   onSubmit,
@@ -24,7 +26,7 @@ export default function Editor({
   const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const chat = useChatStore((state) => state.chat);
-  const states = useChatStore().getCurState()
+  const states = useChatStore().getCurState();
   const updateStates = useChatStore((state) => state.updateStates);
   const inputs = useStageStore((state) => state.inputs);
   const editStage = useStageStore((state) => state.editStage);
@@ -50,6 +52,12 @@ export default function Editor({
     }
   }, [savedRange]);
 
+  const saveStageInput = useMemo(() => {
+    return debounce((chatId: string) => {
+      editStage(chatId, { input: editorRef.current?.innerHTML });
+    }, 800);
+  }, [editStage]);
+
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (!event.shiftKey && event.key === 'Enter') {
@@ -57,6 +65,9 @@ export default function Editor({
         onSubmit(removeTagsExceptImg(editorRef.current?.innerHTML || ''));
         // @ts-ignore
         editorRef.current.innerHTML = '';
+        editStage(chat.id, { input: '' });
+      } else {
+        saveStageInput(chat.id);
       }
     },
     [onSubmit]

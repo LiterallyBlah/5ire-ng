@@ -15,6 +15,57 @@ import { getProvider, getChatModel } from 'providers';
 
 const debug = Debug('5ire:stores:useChatStore');
 
+const safeParseJSON = (jsonString: string | null, fallback: any = null) => {
+  if (!jsonString) return fallback;
+  try {
+    // Handle empty string cases
+    if (jsonString.trim() === '') return fallback;
+    const parsed = JSON.parse(jsonString);
+    // Check if parsed result is null/undefined
+    return parsed ?? fallback;
+  } catch (e) {
+    console.error('Failed to parse JSON:', e);
+    return fallback;
+  }
+};
+
+const ensureValidJson = (value: any, defaultValue: any = null): string => {
+  if (!value) return JSON.stringify(defaultValue);
+  if (typeof value === 'string') {
+    try {
+      // Try parsing and re-stringifying to validate
+      JSON.parse(value);
+      return value;
+    } catch (e) {
+      return JSON.stringify(defaultValue);
+    }
+  }
+  // If it's an object/array, stringify it
+  try {
+    return JSON.stringify(value);
+  } catch (e) {
+    return JSON.stringify(defaultValue);
+  }
+};
+
+const standardizeToolResponse = (response: any): string | null => {
+  if (!response) return null;
+  try {
+    // If it's a string, parse it first
+    const parsed = typeof response === 'string' ? safeParseJSON(response, {}) : response;
+    
+    // Ensure we have a standard format
+    const standardized = {
+      content: parsed.content || parsed
+    };
+    
+    return JSON.stringify(standardized);
+  } catch (e) {
+    console.error('Failed to standardize tool response:', e);
+    return JSON.stringify({ content: null });
+  }
+};
+
 export interface IChatStore {
   chats: IChat[];
   chat: {
@@ -107,13 +158,12 @@ const useChatStore = create<IChatStore>((set, get) => ({
     const $chat = {
       model: api.model,
       temperature: getProvider(api.provider).chat.temperature.default,
-      maxTokens: getChatModel(api.provider, api.model).maxTokens,
+      maxTokens: null,
       maxCtxMessages: NUM_CTX_MESSAGES,
       ...chat,
       id: tempChatId,
     } as IChat;
-    editStage($chat.id, { input: '', prompt: null });
-    debug('Init a chat', $chat);
+    console.log('Init a chat', $chat);
     set({ chat: $chat, messages: [] });
     return $chat;
   },
@@ -154,7 +204,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
     } as IChat;
     const { getPrompt, editStage } = useStageStore.getState();
     const stagePrompt = getPrompt(tempChatId);
-    debug('Create a chat ', $chat);
+    console.log('Create a chat ', $chat);
     const ok = await window.electron.db.run(
       `INSERT INTO chats (id, summary, model, systemMessage, temperature, maxCtxMessages, maxTokens, stream, createdAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -232,7 +282,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
     if (!isNil(chat.stream)) {
       stats.push('stream = ?');
       $chat.stream = chat.stream;
-      params.push($chat.stream ? 1 : 0);
+      params.push(chat.stream ? 1 : 0);
     }
     if ($chat.id && stats.length) {
       params.push($chat.id);
@@ -248,7 +298,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
         return c;
       });
       set({ chat: updatedChat, chats: updatedChats });
-      debug('Update chat ', updatedChat);
+      console.log('Update chat ', updatedChat);
       return true;
     }
     return false;
@@ -258,7 +308,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
       'SELECT id, summary, model, systemMessage, maxTokens, temperature, context, maxCtxMessages, stream, createdAt FROM chats where id = ?',
       id
     )) as IChat;
-    debug('Get chat:', chat);
+    console.log('Get chat:', chat);
     set({ chat });
     return chat;
   },
@@ -299,25 +349,170 @@ const useChatStore = create<IChatStore>((set, get) => ({
     }
   },
   createMessage: async (message: Partial<IChatMessage>) => {
-    const msg = {
+    console.log('[createMessage] Input message:', message);
+
+    // Validate JSON fields before storing
+    const validateJson = (value: any): string | null => {
+      if (!value) return null;
+      try {
+        return typeof value === 'string' ? value : JSON.stringify(value);
+      } catch (e) {
+        console.error('[createMessage] Failed to stringify JSON:', e);
+        return null;
+      }
+    };
+
+    // Special handling for toolResponse
+    const validateToolResponse = (response: any): string | null => {
+      return standardizeToolResponse(response);
+    };
+
+    // Create a type without the tool fields first
+    const baseMsg = {
       id: typeid('msg').toString(),
-      ...message,
+      chatId: message.chatId,
+      systemMessage: message.systemMessage || null,
+      prompt: message.prompt || '',
+      reply: message.reply || '',
+      model: message.model || '',
+      temperature: message.temperature || 0,
+      maxTokens: message.maxTokens || null,
+      inputTokens: message.inputTokens || 0,
+      outputTokens: message.outputTokens || 0,
+      memo: message.memo || null,
+      isActive: message.isActive || 1,
+      citedFiles: ensureValidJson(message.citedFiles, []),
+      citedChunks: ensureValidJson(message.citedChunks, []),
+      isTool: message.isTool || false,
       createdAt: date2unix(new Date()),
-    } as IChatMessage;
-    const columns = Object.keys(msg);
-    await window.electron.db.run(
-      `INSERT INTO messages (${columns.join(',')})
-      VALUES(${'?'.repeat(columns.length).split('').join(',')})`,
-      Object.values(msg)
-    );
-    set((state) => ({
-      messages: [...state.messages, msg],
-    }));
-    // 每次提交消息后，清空输入框
-    useStageStore
-      .getState()
-      .editStage(msg.chatId, { chatId: msg.chatId, input: '' });
-    return msg;
+    };
+
+    console.log('[createMessage] Base message:', baseMsg);
+
+    try {
+      // First ensure the messages table exists with correct schema
+      console.log('[createMessage] Creating/updating messages table...');
+      try {
+        const createResult = await window.electron.db.run(`
+          CREATE TABLE IF NOT EXISTS messages (
+            id TEXT PRIMARY KEY,
+            chatId TEXT NOT NULL,
+            systemMessage TEXT,
+            prompt TEXT,
+            reply TEXT,
+            model TEXT,
+            temperature REAL,
+            maxTokens INTEGER,
+            inputTokens INTEGER,
+            outputTokens INTEGER,
+            memo TEXT,
+            isActive INTEGER,
+            citedFiles TEXT,
+            citedChunks TEXT,
+            isTool INTEGER,
+            toolCall TEXT,
+            toolResponse TEXT,
+            createdAt INTEGER,
+            CHECK (
+              json_valid(citedFiles) OR citedFiles IS NULL,
+              json_valid(citedChunks) OR citedChunks IS NULL,
+              json_valid(toolCall) OR toolCall IS NULL,
+              json_valid(toolResponse) OR toolResponse IS NULL
+            )
+          )
+        `);
+        console.log('[createMessage] Table creation result:', createResult);
+      } catch (tableError) {
+        console.error('[createMessage] Failed to create table:', tableError);
+      }
+
+      // Verify table structure
+      try {
+        const tableInfo = await window.electron.db.all("PRAGMA table_info(messages)");
+        console.log('[createMessage] Table structure:', tableInfo);
+      } catch (infoError) {
+        console.error('[createMessage] Failed to get table info:', infoError);
+      }
+
+      // Try minimal insert first
+      console.log('[createMessage] Attempting minimal insert...');
+      try {
+        const minimalResult = await window.electron.db.run(
+          `INSERT INTO messages (id, chatId, prompt) VALUES (?, ?, ?)`,
+          [baseMsg.id, baseMsg.chatId, baseMsg.prompt]
+        );
+        console.log('[createMessage] Minimal insert result:', minimalResult);
+      } catch (insertError) {
+        console.error('[createMessage] Minimal insert failed:', insertError);
+        throw insertError;
+      }
+
+      // Update fields one by one with better error handling
+      const fields = [
+        { name: 'systemMessage', value: baseMsg.systemMessage, isJson: false },
+        { name: 'reply', value: baseMsg.reply, isJson: false },
+        { name: 'model', value: baseMsg.model, isJson: false },
+        { name: 'temperature', value: baseMsg.temperature, isJson: false },
+        { name: 'maxTokens', value: baseMsg.maxTokens, isJson: false },
+        { name: 'inputTokens', value: baseMsg.inputTokens, isJson: false },
+        { name: 'outputTokens', value: baseMsg.outputTokens, isJson: false },
+        { name: 'memo', value: baseMsg.memo, isJson: false },
+        { name: 'isActive', value: baseMsg.isActive, isJson: false },
+        { name: 'citedFiles', value: baseMsg.citedFiles, isJson: true },
+        { name: 'citedChunks', value: baseMsg.citedChunks, isJson: true },
+        { name: 'isTool', value: message.isTool ? 1 : 0, isJson: false },
+        { name: 'toolCall', value: validateJson(message.toolCall), isJson: true },
+        { name: 'toolResponse', value: validateToolResponse(message.toolResponse), isJson: true },
+        { name: 'createdAt', value: baseMsg.createdAt, isJson: false }
+      ];
+
+      for (const field of fields) {
+        try {
+          console.log(`[createMessage] Updating ${field.name}:`, field.value);
+          const sql = field.isJson
+            ? `UPDATE messages SET ${field.name} = json(?) WHERE id = ?`
+            : `UPDATE messages SET ${field.name} = ? WHERE id = ?`;
+          const updateResult = await window.electron.db.run(sql, [field.value, baseMsg.id]);
+          console.log(`[createMessage] Update result for ${field.name}:`, updateResult);
+        } catch (updateError) {
+          console.error(`[createMessage] Failed to update ${field.name}:`, updateError);
+        }
+      }
+
+      // Verify final state
+      try {
+        const finalState = await window.electron.db.get(
+          'SELECT * FROM messages WHERE id = ?',
+          [baseMsg.id]
+        );
+        console.log('[createMessage] Final message state:', finalState);
+      } catch (verifyError) {
+        console.error('[createMessage] Failed to verify final state:', verifyError);
+      }
+
+      // Create the properly typed message for the state
+      const typedMsg: IChatMessage = {
+        ...baseMsg,
+        toolCall: message.toolCall,
+        toolResponse: message.toolResponse,
+      } as IChatMessage;
+
+      console.log('[createMessage] Setting state with message:', typedMsg);
+
+      set((state) => ({
+        messages: [...state.messages, typedMsg],
+      }));
+
+      // Clear input after message creation
+      useStageStore
+        .getState()
+        .editStage(typedMsg.chatId, { chatId: typedMsg.chatId, input: '' });
+
+      return typedMsg;
+    } catch (error) {
+      console.error('[createMessage] Fatal error:', error);
+      throw error;
+    }
   },
   appendReply: (msgId: string, reply: string) => {
     let $reply = '';
@@ -400,7 +595,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
           }
         })
       );
-      debug('Update message ', JSON.stringify(msg));
+      console.log('Update message ', JSON.stringify(msg));
       return true;
     }
     return false;
@@ -426,7 +621,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
     if (messages && messages.length) {
       const index = messages.findIndex((msg) => msg.id === id);
       if (index > -1) {
-        debug(`remove msg(${id}) from index: ${index})`);
+        console.log(`remove msg(${id}) from index: ${index})`);
         messages.splice(index, 1);
         set({ messages: [...messages] });
       }
@@ -444,33 +639,157 @@ const useChatStore = create<IChatStore>((set, get) => ({
     offset?: number;
     keyword?: string;
   }) => {
+    console.log('[fetchMessages] Fetching messages for chat:', chatId);
+
     if (chatId === tempChatId) {
+      console.log('[fetchMessages] Temp chat ID detected, returning empty array');
       set({ messages: [] });
       return [];
     }
-    let sql = `SELECT messages.*, bookmarks.id bookmarkId
-    FROM messages
-    LEFT JOIN bookmarks ON bookmarks.msgId = messages.id
-    WHERE messages.chatId = ?`;
-    let params = [chatId, limit, offset];
-    if (keyword && keyword.trim() !== '') {
-      sql += ` AND (messages.prompt LIKE ? COLLATE NOCASE OR messages.reply LIKE ? COLLATE NOCASE)`;
-      params = [
-        chatId,
-        `%${keyword.trim()}%`,
-        `%${keyword.trim()}%`,
-        limit,
-        offset,
-      ];
+
+    try {
+      // First verify table exists and has correct structure
+      let tableInfo: Array<{ name: string; type: string }>;
+      try {
+        tableInfo = await window.electron.db.all("PRAGMA table_info(messages)");
+        console.log('[fetchMessages] Table structure:', tableInfo);
+      } catch (pragmaError) {
+        console.error('[fetchMessages] Failed to get table info:', pragmaError);
+        tableInfo = [];
+      }
+
+      // Start with basic query
+      let sql = `SELECT messages.*, bookmarks.id bookmarkId FROM messages`;
+
+      // Only add JSON functions if table exists and has the columns
+      if (tableInfo && tableInfo.length > 0) {
+        const hasJsonColumns = tableInfo.some((col: { name: string }) => 
+          ['toolCall', 'toolResponse', 'citedFiles', 'citedChunks'].includes(col.name)
+        );
+        
+        if (hasJsonColumns) {
+          sql = `SELECT 
+            messages.*,
+            bookmarks.id bookmarkId,
+            CASE 
+              WHEN json_valid(messages.toolCall) = 1 THEN messages.toolCall 
+              ELSE NULL 
+            END as toolCall,
+            CASE 
+              WHEN json_valid(messages.toolResponse) = 1 THEN messages.toolResponse
+              ELSE NULL 
+            END as toolResponse,
+            CASE 
+              WHEN json_valid(messages.citedFiles) = 1 THEN messages.citedFiles 
+              ELSE '[]' 
+            END as citedFiles,
+            CASE 
+              WHEN json_valid(messages.citedChunks) = 1 THEN messages.citedChunks 
+              ELSE '[]' 
+            END as citedChunks
+          FROM messages`;
+        }
+      }
+
+      // Add joins and conditions
+      sql += ` LEFT JOIN bookmarks ON bookmarks.msgId = messages.id
+        WHERE messages.chatId = ?`;
+
+      let params = [chatId, limit, offset];
+
+      if (keyword && keyword.trim() !== '') {
+        sql += ` AND (messages.prompt LIKE ? COLLATE NOCASE OR messages.reply LIKE ? COLLATE NOCASE)`;
+        params = [
+          chatId,
+          `%${keyword.trim()}%`,
+          `%${keyword.trim()}%`,
+          limit,
+          offset,
+        ];
+      }
+      sql += ` ORDER BY messages.createdAt ASC
+      LIMIT ? OFFSET ?`;
+
+      console.log('[fetchMessages] SQL:', sql);
+      console.log('[fetchMessages] Params:', params);
+
+      interface DBMessage {
+        id: string;
+        chatId: string;
+        systemMessage: string | null;
+        prompt: string;
+        reply: string;
+        model: string;
+        temperature: number;
+        maxTokens: number | null;
+        inputTokens: number;
+        outputTokens: number;
+        memo: string | null;
+        isActive: number;
+        citedFiles: string | null;
+        citedChunks: string | null;
+        isTool: number;
+        toolCall: string | null;
+        toolResponse: string | null;
+        createdAt: number;
+        bookmarkId?: string;
+      }
+
+      const dbMessages = await window.electron.db.all(sql, params) as DBMessage[];
+      if (!dbMessages) {
+        console.log('[fetchMessages] No messages found, returning empty array');
+        set({ messages: [] });
+        return [];
+      }
+
+      console.log('[fetchMessages] Raw DB messages:', dbMessages);
+
+      // Parse the JSON strings back into objects with proper typing
+      const messages: IChatMessage[] = dbMessages.map((msg: DBMessage) => {
+        // Safe defaults
+        const defaultToolFields = {
+          toolCall: undefined,
+          toolResponse: undefined,
+          citedFiles: [],
+          citedChunks: [],
+          isTool: Boolean(msg.isTool)
+        };
+
+        try {
+          return {
+            ...msg,
+            ...defaultToolFields,
+            toolCall: msg.toolCall ? safeParseJSON(msg.toolCall) : undefined,
+            toolResponse: msg.toolResponse ? safeParseJSON(msg.toolResponse) : undefined,
+            citedFiles: safeParseJSON(ensureValidJson(msg.citedFiles, []), []),
+            citedChunks: safeParseJSON(ensureValidJson(msg.citedChunks, []), [])
+          } as IChatMessage;
+        } catch (error) {
+          console.error(`Error parsing message ${msg.id}:`, error);
+          return {
+            ...msg,
+            ...defaultToolFields,
+            citedFiles: JSON.stringify([]),
+            citedChunks: JSON.stringify([])
+          } as IChatMessage;
+        }
+      });
+
+      // Filter out messages with invalid JSON
+      const validMessages = messages.filter(msg => {
+        const hasValidToolData = !msg.isTool || 
+          (typeof msg.toolCall !== 'undefined' || typeof msg.toolResponse !== 'undefined');
+        return hasValidToolData;
+      });
+
+      set({ messages: validMessages });
+      return validMessages;
+    } catch (error) {
+      console.error('[fetchMessages] Error:', error);
+      // Return empty array on error to prevent UI issues
+      set({ messages: [] });
+      return [];
     }
-    sql += `ORDER BY messages.createdAt ASC
-    LIMIT ? OFFSET ?`;
-    const messages = (await window.electron.db.all(
-      sql,
-      params
-    )) as IChatMessage[];
-    set({ messages });
-    return messages;
   },
 }));
 

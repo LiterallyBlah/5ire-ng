@@ -1,7 +1,7 @@
 {
   "name": "5ire",
   "productName": "5ire",
-  "version": "0.9.3",
+  "version": "0.10.3",
   "description": "A Sleek Desktop AI Assistant & MCP Client",
   "main": "src/main/main.ts",
   "repository": "https://github.com/nanbingxyz/5ire.git",
@@ -80,6 +80,7 @@
   },
   "dependencies": {
     "@lancedb/lancedb": "^0.14.1",
+    "pdf-parse": "^1.1.1",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
@@ -105,6 +106,7 @@
     "@types/i18next-node-fs-backend": "^2.1.2",
     "@types/jest": "^29.5.2",
     "@types/lodash": "^4.14.195",
+    "@types/mime": "^3.0.4",
     "@types/mockery": "^1.4.33",
     "@types/mousetrap": "^1.6.15",
     "@types/node": "20.2.5",
@@ -170,7 +172,6 @@
     "mousetrap": "^1.6.5",
     "node-abi": "^3.65.0",
     "officeparser": "^5.1.1",
-    "pdf-parse": "^1.1.1",
     "postcss": "^8.4.24",
     "postcss-loader": "^7.3.3",
     "prettier": "^3.0.0",
@@ -200,9 +201,9 @@
     "update-electron-app": "^3.0.0",
     "url-loader": "^4.1.1",
     "valid-url": "^1.0.9",
-    "webpack": "^5.85.0",
+    "webpack": "^5.97.1",
     "webpack-bundle-analyzer": "^4.9.0",
-    "webpack-cli": "^5.1.1",
+    "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.0",
     "webpack-merge": "^5.9.0",
     "zustand": "^4.3.9"
@@ -213,7 +214,9 @@
     "compression": "maximum",
     "asar": true,
     "asarUnpack": [
-      "**/node_modules/**/*"
+      "**/node_modules/**/*",
+      "!**/node_modules/**/test/**",
+      "!**/node_modules/**/__tests__/**"
     ],
     "protocols": [
       {
@@ -230,6 +233,8 @@
     "files": [
       "dist",
       "package.json",
+      "!test/**/*",
+      "!**/*.spec.*",
       "!**/node_modules/**/*.map",
       "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme,LICENSE,test.js}",
       "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",

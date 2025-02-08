@@ -65,7 +65,7 @@ export default function WorkspaceMenu({ collapsed }: { collapsed: boolean }) {
   };
 
   useEffect(() => {
-    Mousetrap.bind('mod+k', () => navigate('/settings'));
+    Mousetrap.bind('mod+,', () => navigate('/settings'));
     Mousetrap.bind('mod+p', () => navigate('/prompts'));
     return () => {
       Mousetrap.unbind('mod+k');

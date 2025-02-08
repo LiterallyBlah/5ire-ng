@@ -12,6 +12,7 @@ import { merge } from 'lodash';
 import Doubao from './Doubao';
 import Grok from './Grok';
 import DeepSeek from './DeepSeek';
+import Mistral from './Mistral';
 
 export const providers: { [key: string]: IServiceProvider } = {
   OpenAI,
@@ -20,6 +21,7 @@ export const providers: { [key: string]: IServiceProvider } = {
   Google,
   Grok,
   Baidu,
+  Mistral,
   Moonshot,
   ChatBro,
   Ollama,

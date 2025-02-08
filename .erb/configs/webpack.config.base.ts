@@ -11,6 +11,7 @@ import { dependencies as externals } from '../../release/app/package.json';
 const configuration: webpack.Configuration = {
   externals: [
     ...Object.keys(externals || {}),
+    'pdf-parse',
     function ({ request }, callback) {
       if (
         request &&
@@ -28,7 +29,12 @@ const configuration: webpack.Configuration = {
     rules: [
       {
         test: /\.[jt]sx?$/,
-        exclude: /node_modules/,
+        exclude: [
+          /node_modules/,
+          /node_modules\/.*\/test\/.*/,
+          /node_modules\/.*\/__tests__\/.*/,
+          /node_modules\/pdf-parse\/test\/.*/,
+        ],
         use: {
           loader: 'ts-loader',
           options: {

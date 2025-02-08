@@ -159,6 +159,20 @@ export default {
       isActive: false,
     },
     {
+      key: 'Tavily',
+      command: 'npx',
+      description:
+        'Tavily MCP Server',
+      args: [
+        '-y',
+        'tavily-mcp@0.1.2',
+      ],
+      "env": {
+        "TAVILY_API_KEY": "<apiKey:string:You can get the API key from https://tavily.com>"
+      },
+      isActive: false,
+    },
+    {
       key: 'Time',
       command: 'uvx',
       description:
@@ -183,6 +197,20 @@ export default {
       description:
         'A Model Context Protocol server that provides web content fetching capabilities',
       args: ['mcp-server-fetch'],
+      isActive: false,
+    },
+    {
+      key: 'Dradis',
+      command: 'npx',
+      description:
+        'A Model Context Protocol server that provides integration with Dradis note-taking platform',
+      args: ['-y', 'dradis-mcp'],
+      env: {
+        'DRADIS_URL': '<url:string:Your Dradis instance URL>',
+        'DRADIS_API_TOKEN': '<token:string:Your Dradis API token>',
+        'DRADIS_DEFAULT_TEAM_ID': '<number:string:Default team ID for project creation>',
+        'DRADIS_DEFAULT_TEMPLATE_ID': '<number:string:Default template ID for project creation>'
+      },
       isActive: false,
     },
   ],

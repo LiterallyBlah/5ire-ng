@@ -85,16 +85,16 @@ export default function useChatContext(): IChatContext{
       const { chat } = useChatStore.getState();
       const { api } = useSettingsStore.getState();
       const model = getModel();
-      let maxTokens = model.maxTokens || null;
+      let maxTokens = model.defaultMaxTokens || model.maxTokens;
       const prompt = useStageStore.getState().getPrompt(chat.id);
       if (prompt?.maxTokens != null && isValidMaxTokens(prompt?.maxTokens, api.provider, model.name)) {
-        maxTokens = prompt?.maxTokens as number | null;
+        maxTokens = prompt?.maxTokens || prompt?.maxTokens as number;
       }
       if (chat?.maxTokens != null && isValidMaxTokens(chat?.maxTokens, api.provider, model.name)) {
-        maxTokens = chat?.maxTokens as number | null;
+        maxTokens = chat?.maxTokens as number;
       }
       // debug(`Chat(${chat.id}):getMaxTokens: ${maxTokens}`);
-      return maxTokens;
+      return maxTokens as number;
     };
 
     const getChatContext = () => {
@@ -122,17 +122,17 @@ export default function useChatContext(): IChatContext{
         : NUM_CTX_MESSAGES;
       if (maxCtxMessages > 0) {
         const messages = useChatStore.getState().messages || [];
-        if (messages.length <= maxCtxMessages) {
-          ctxMessages = messages.slice(0, -1);
+        // Filter out tool messages before slicing
+        const nonToolMessages = messages.filter(msg => !msg.isTool);
+        if (nonToolMessages.length <= maxCtxMessages) {
+          ctxMessages = nonToolMessages.slice(0, -1);
         } else {
-          // @NOTE: 去除最后一条外的最后的 maxCtxMessages 条 （最后一条是刚创建的）
-          ctxMessages = messages.slice(
+          ctxMessages = nonToolMessages.slice(
             -maxCtxMessages - 1,
-            messages.length - 1
+            nonToolMessages.length - 1
           );
         }
       }
-      // debug(`Chat(${chat.id}):getCtxMessages: ${ctxMessages.length} messages`);
       return ctxMessages;
     };
 

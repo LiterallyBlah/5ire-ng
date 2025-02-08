@@ -14,7 +14,7 @@
 </p>
 
 ## 🚀 About 5ire-NG
-5ire-NG is a fork of the 5ire AI assistant that adds **local model support through Ollama integration**. Building upon the original [5ire](https://github.com/nanbingxyz/5ire), this version focuses on providing a seamless experience whilst working with local AI models.
+5ire-NG is a fork of the 5ire AI assistant that adds **local model support through Ollama integration** along with other features below. Building upon the original [5ire](https://github.com/nanbingxyz/5ire), this version focuses on providing a seamless experience whilst working with local AI models and tools.
 
 ## 🎯 Features
 
@@ -22,6 +22,8 @@
 - **Auto-detection of local Ollama models** – no manual configuration required
 - **Simple model switching** via dropdown in the chat UI
 - **Streamlined chat experience** with local AI models
+- **Dynamic tool support detection** (green indicator for supported tools)
+- **Sync button** for model state synchronisation
 
 ### 📖 Core 5ire Features
 - All the original features from 5ire, including:
@@ -39,6 +41,16 @@
    - Node.js (v18+) and npm
    - Git
    - For Windows: Visual Studio Code Build Tools
+   - npx (comes with Node.js/npm installation)
+   - uv package manager:
+     # macOS
+     brew install uv
+
+     # Windows (PowerShell)
+     powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+     # Linux/WSL
+     curl -LsSf https://astral.sh/uv/install.sh | sh
 
 2. **Clone the repository:**
    ```bash
@@ -71,33 +83,54 @@ The application should now be running in development mode.
 - **Ollama Model Integration**  
   - Local Ollama models auto-detection
   - Model selection via dropdown in chat UI
-  - Basic integration with chat interface
+  - Dynamic tool support detection (green indicator for supported tools)
+  - Sync button for model state synchronisation
   - Tool support for private operations
+- **Dradis MCP Integration**: [Dradis MCP](https://github.com/LiterallyBlah/Dradis-MCP)
+  - Manage projects
+  - Manage vulnerbailities
+  - Manage Content Control
+  - Document Control
+  - Direct integration with 5ire-ng
 
-### 🔄 In Progress
+### 🔄 In Progress (Weeks 1-3)
 - **MCP Improvements**
   - Add MCP via the frontend
   - Show tool input and output in the chat interface
+  - AI thinking handling
+- **Investment Integration**
+  - Implement IBKR MCP tool for investment tracking
+  - Portfolio updates and P&L summaries
+- **AI Interaction Refinements**
+  - Optimise system prompts for better usability
+  - Enhance tool descriptions with examples
+  - Improve chat experience
 
 ### 🚀 Planned Features
-- **Enhanced Model Compatibility**
-  - Enhanced thinking model compatibility
-- **UI Improvements**
-  - Enhanced model selection interface
-  - Better error feedback
-  - Improved chat experience
-  - Call tools directly from the chat interface (with a '/<tool\>')
-- **AI Agents**
+
+#### Short-term (Weeks 4-8)
+- **Voice Integration**
+  - Speech-to-text (STT) provider selection
+  - Support for local models (Whisper, Vosk)
+  - Cloud provider options (OpenAI, Deepgram, Google)
+  - Real-time transcription capabilities
+- **Task MCP**
+  - Add support for scheduling tasks via MCP
+  - Have a direct integration that enables a Tasks tab
+  - Task management features (CRUD operations)
+
+#### Long-term (Weeks 9+)
+- **Security Tools Integration**
+  - Automated scanner integrations (Nmap, Nikto, Nuclei)
+- **AI Agents & Advanced Features**
   - Add support for AI Agents
   - Call agents in the chat interface
-- **Voice Integration**
-  - Add support for voice input and output
 
 ## 🤝 Contributing
 Contributions are welcome! Feel free to submit PRs or issues to help improve the project.
 
 ## 📝 Credits
-This project is based on [5ire](https://github.com/nanbingxyz/5ire). Credit goes to the original authors for their work on the initial AI assistant.
+This project is based on [5ire](https://github.com/nanbingxyz/5ire). Credit goes to the original authors for their work on the initial AI assistant. This project is regularly merged with [5ire](https://github.com/nanbingxyz/5ire) for updates and bug fixes.
 
 ## 📜 Licence
 5ire-NG is licensed under the **GNU General Public Licence v3.0**.

@@ -215,5 +215,15 @@
   "Common.English": "英语",
   "Common.SimpleChinese": "简体中文",
   "Common.Language": "语言",
-  "Common.Image": "图片"
+  "Common.Image": "图片",
+  "Tool.HowToAddTools": "如何添加工具？",
+  "Tool.ConfigFile": "配置文件",
+  "Common.Add": "添加",
+  "Tool.HowToAddToolsDescription": "你可以通过修改 MCP 配置文件添加工具。如果修改导致了任何错误且无法修复，可直接删除配置文件，5ire 将在下次重启时重置配置。",
+  "Common.NoMoreThan": "不超过",
+  "Common.Normal": "常规",
+  "Common.Large": "较大",
+  "Common.FontSize": "字体大小",
+  "Apperance.ChatFontSize": "对话字体大小",
+  "Apperance.ColorTheme": "色彩主题"
 }
