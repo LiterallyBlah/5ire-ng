@@ -12,11 +12,10 @@ export function init() {
   }
 }
 
-
-export function captureException(error: Error | string) {
+export function captureException(error: unknown) {
   console.error(error);
   if (window.envVars.SENTRY_DSN && window.envVars.NODE_ENV !== 'development') {
-    Sentry.captureException(error);
+    Sentry.captureException(error instanceof Error ? error : new Error(String(error)));
   }
 }
 

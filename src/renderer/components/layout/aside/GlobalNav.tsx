@@ -17,7 +17,7 @@ import {
 } from '@fluentui/react-icons';
 import { useTranslation } from 'react-i18next';
 import useNav from 'hooks/useNav';
-import { tempChatId } from 'consts';
+import { tempChatId } from '../../../../consts';
 import WorkspaceMenu from './WorkspaceMenu';
 import useMCPStore from 'stores/useMCPStore';
 import { useEffect, useMemo, useState } from 'react';

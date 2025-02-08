@@ -35,7 +35,9 @@ export default function Version() {
       .then((appVersion) => {
         return setVersion(appVersion);
       })
-      .catch(captureException);
+      .catch((error: any) => {
+        captureException(error instanceof Error ? error : new Error(String(error)));
+      });
 
     return () => {
       if (timer) {

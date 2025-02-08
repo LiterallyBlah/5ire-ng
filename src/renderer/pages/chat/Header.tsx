@@ -16,7 +16,7 @@ import useChatContext from 'hooks/useChatContext';
 import ChatSettingsDrawer from './ChatSettingsDrawer';
 import ConfirmDialog from 'renderer/components/ConfirmDialog';
 
-import { tempChatId } from 'consts';
+import { tempChatId } from '../../../consts';
 import useNav from 'hooks/useNav';
 import useToast from 'hooks/useToast';
 

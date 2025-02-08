@@ -26,7 +26,9 @@ export default function LanguageSettings() {
           i18n.changeLanguage(_lang as LanguageType);
           return;
         })
-        .catch(captureException);
+        .catch((error: any) => {
+          captureException(error instanceof Error ? error : new Error(String(error)));
+        });
     } else {
       i18n.changeLanguage(data.value as LanguageType);
     }

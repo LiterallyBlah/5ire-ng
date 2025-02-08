@@ -4,6 +4,7 @@ import {
   CloudArrowUp24Regular,
   CloudArrowDown20Filled,
   CloudArrowDown20Regular,
+  Delete24Regular,
   bundleIcon,
   MoreHorizontal24Filled,
 } from '@fluentui/react-icons';
@@ -32,6 +33,9 @@ import {
 } from '@fluentui/react-components';
 import EmbedSettings from './EmbedSettings';
 import LanguageSettings from './LanguageSettings';
+import { tempChatId } from '../../../consts';
+import useChatStore from 'stores/useChatStore';
+import DeleteAllChatsButton from 'renderer/components/DeleteAllChatsButton';
 
 const debug = Debug('5ire:pages:settings:index');
 
@@ -76,9 +80,9 @@ export default function Settings() {
             setUpdatedAtCloud(undefined);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         debug(error);
-        captureException(error as Error);
+        captureException(error instanceof Error ? error : new Error(String(error)));
       }
     })();
   }, [user, updated]);
@@ -113,9 +117,9 @@ export default function Settings() {
           notifyError(t('Settings.Notification.RestoreFromCloudFailed'));
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       debug(error);
-      captureException(error);
+      captureException(error instanceof Error ? error : new Error(String(error)));
     } finally {
       setLoading(false);
     }
@@ -142,9 +146,9 @@ export default function Settings() {
         notifySuccess(t('Settings.Notification.SaveToCloudSuccess'));
         setUpdated(true);
       }
-    } catch (error) {
+    } catch (error: any) {
       debug(error);
-      captureException(error);
+      captureException(error instanceof Error ? error : new Error(String(error)));
     } finally {
       setLoading(false);
     }
@@ -166,9 +170,16 @@ export default function Settings() {
             <MenuPopover>
               <MenuList>
                 <MenuItem icon={<CloudArrowUpIcon />} onClick={saveToCloud}>
-                  {' '}
                   {t('Settings.Action.SaveToCloud')}
                 </MenuItem>
+                <MenuItem 
+                  icon={<CloudArrowDownIcon />} 
+                  onClick={restoreFromCloud}
+                >
+                  {t('Settings.Action.DownloadFromCloud')}
+                </MenuItem>
+                <hr className="my-2 border-t border-base" />
+                <DeleteAllChatsButton />
               </MenuList>
             </MenuPopover>
           </Menu>

@@ -432,7 +432,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
               json_valid(toolResponse) OR toolResponse IS NULL
             )
           )
-        `);
+        `, []); // Add empty params array
         console.log('[createMessage] Table creation result:', createResult);
       } catch (tableError) {
         console.error('[createMessage] Failed to create table:', tableError);

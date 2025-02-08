@@ -1,4 +1,4 @@
-import { tempChatId } from 'consts';
+import { tempChatId } from '../consts';
 import Debug from 'debug';
 import { produce } from 'immer';
 import { IPrompt, IStage } from 'intellichat/types';
