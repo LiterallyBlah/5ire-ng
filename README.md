@@ -25,6 +25,9 @@
 - **Dynamic tool support detection** (green indicator for supported tools)
 - **Sync button** for model state synchronisation
 
+### Other Improvements
+- Check the roadmap for more specific changes/improvements
+
 ### 📖 Core 5ire Features
 - All the original features from 5ire, including:
   - Conversation management
@@ -92,11 +95,14 @@ The application should now be running in development mode.
   - Manage Content Control
   - Document Control
   - Direct integration with 5ire-ng
+- **MCP Improvements**
+  - Show tool input and output in the chat interface
+- **General Improvements**
+  - Add a delete all chats/messages button
 
 ### 🔄 In Progress (Weeks 1-3)
 - **MCP Improvements**
   - Add MCP via the frontend
-  - Show tool input and output in the chat interface
   - AI thinking handling
 - **Investment Integration**
   - Implement IBKR MCP tool for investment tracking
