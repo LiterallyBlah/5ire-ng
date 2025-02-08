@@ -13,8 +13,41 @@ import useKnowledgeStore from 'stores/useKnowledgeStore';
 import useToast from 'hooks/useToast';
 import ToolSpinner from 'renderer/components/ToolSpinner';
 import useSettingsStore from 'stores/useSettingsStore';
+import ErrorBoundary from 'renderer/components/ErrorBoundary';
 
 const debug = Debug('5ire:pages:chat:Message');
+
+const SafeJSONParse = (jsonString: string | null | undefined | any, defaultValue: any = []): any => {
+  // Handle non-string values first
+  if (typeof jsonString !== 'string') {
+    if (jsonString === null || jsonString === undefined) {
+      return defaultValue;
+    }
+    // If it's already an object/array, return it
+    if (typeof jsonString === 'object') {
+      return jsonString;
+    }
+    // Convert to string for other types
+    jsonString = String(jsonString);
+  }
+
+  // Now handle string values
+  if (jsonString.trim() === '' || jsonString.trim() === '[]') {
+    return defaultValue;
+  }
+
+  try {
+    const parsed = JSON.parse(jsonString);
+    // Check for null/undefined/empty array after parsing
+    if (!parsed || (Array.isArray(parsed) && parsed.length === 0)) {
+      return defaultValue;
+    }
+    return parsed;
+  } catch (e) {
+    console.debug('JSON parse failed for:', jsonString); // Changed to debug level
+    return defaultValue;
+  }
+};
 
 export default function Message({ message }: { message: IChatMessage }) {
   const { t } = useTranslation();
@@ -28,13 +61,20 @@ export default function Message({ message }: { message: IChatMessage }) {
     [keywords, message.chatId]
   );
   const citedFiles = useMemo(
-    () => JSON.parse(message.citedFiles || '[]'),
+    () => {
+      const parsed = SafeJSONParse(message.citedFiles, []);
+      return Array.isArray(parsed) ? parsed : [];
+    },
     [message.citedFiles]
   );
 
-  const citedChunks = useMemo(() => {
-    return JSON.parse(message.citedChunks || '[]');
-  }, [message.citedChunks]);
+  const citedChunks = useMemo(
+    () => {
+      const parsed = SafeJSONParse(message.citedChunks, []);
+      return Array.isArray(parsed) ? parsed : [];
+    },
+    [message.citedChunks]
+  );
 
   const { render } = useMarkdown();
 
@@ -73,6 +113,28 @@ export default function Message({ message }: { message: IChatMessage }) {
   }, [message.isActive, registerCitationClick]);
 
   const replyNode = useCallback(() => {
+    if (message.isTool) {
+      if (message.toolCall) {
+        return (
+          <div className="tool-call-content">
+            <code className="block bg-gray-100 p-2 rounded">
+              {JSON.stringify(message.toolCall, null, 2)}
+            </code>
+          </div>
+        );
+      }
+      if (message.toolResponse) {
+        return (
+          <div className="tool-response-content">
+            <code className="block bg-gray-100 p-2 rounded">
+              {JSON.stringify(message.toolResponse.content, null, 2)}
+            </code>
+          </div>
+        );
+      }
+    }
+
+    // Regular message handling...
     if (message.isActive && states.loading) {
       if (!message.reply || message.reply === '') {
         return (
@@ -113,53 +175,55 @@ export default function Message({ message }: { message: IChatMessage }) {
     );
   }, [message, keyword, states, fontSize]);
   return (
-    <div className="leading-6 message" id={message.id}>
-      <div>
-        <a
-          id={`prompt-${message.id}`}
-          aria-label={`prompt of message ${message.id}`}
-        />
-
-        <div
-          className="msg-prompt my-2 flex flex-start"
-          style={{ minHeight: '40px' }}
-        >
-          <div className="avatar flex-shrink-0 mr-2" />
-          <div
-            className={`mt-1 break-all ${
-              fontSize === 'large' ? 'font-lg' : ''
-            }`}
-            dangerouslySetInnerHTML={{
-              __html: render(highlight(message.prompt, keyword) || ''),
-            }}
+    <ErrorBoundary>
+      <div className="leading-6 message" id={message.id}>
+        <div>
+          <a
+            id={`prompt-${message.id}`}
+            aria-label={`prompt of message ${message.id}`}
           />
-        </div>
-      </div>
-      <div>
-        <a id={`#reply-${message.id}`} aria-label={`Reply ${message.id}`} />
-        <div
-          className="msg-reply mt-2 flex flex-start"
-          style={{ minHeight: '40px' }}
-        >
-          <div className="avatar flex-shrink-0 mr-2" />
-          {replyNode()}
-        </div>
-        {citedFiles.length > 0 && (
-          <div className="message-cited-files mt-2">
-            <div className="mt-4 mb-2">
-              <Divider>{t('Common.References')}</Divider>
-            </div>
-            <ul>
-              {citedFiles.map((file: string) => (
-                <li className="text-gray-500" key={file}>
-                  {file}
-                </li>
-              ))}
-            </ul>
+
+          <div
+            className="msg-prompt my-2 flex flex-start"
+            style={{ minHeight: '40px' }}
+          >
+            <div className="avatar flex-shrink-0 mr-2" />
+            <div
+              className={`mt-1 break-all ${
+                fontSize === 'large' ? 'font-lg' : ''
+              }`}
+              dangerouslySetInnerHTML={{
+                __html: render(highlight(message.prompt, keyword) || ''),
+              }}
+            />
           </div>
-        )}
-        <MessageToolbar message={message} />
+        </div>
+        <div>
+          <a id={`#reply-${message.id}`} aria-label={`Reply ${message.id}`} />
+          <div
+            className="msg-reply mt-2 flex flex-start"
+            style={{ minHeight: '40px' }}
+          >
+            <div className="avatar flex-shrink-0 mr-2" />
+            {replyNode()}
+          </div>
+          {citedFiles.length > 0 && (
+            <div className="message-cited-files mt-2">
+              <div className="mt-4 mb-2">
+                <Divider>{t('Common.References')}</Divider>
+              </div>
+              <ul>
+                {citedFiles.map((file: string) => (
+                  <li className="text-gray-500" key={file}>
+                    {file}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <MessageToolbar message={message} />
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }

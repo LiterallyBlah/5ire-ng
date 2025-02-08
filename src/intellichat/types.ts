@@ -192,6 +192,15 @@ export interface IChatMessage {
   isActive: boolean | 0 | 1;
   citedFiles?: string;
   citedChunks?: string;
+  isTool?: boolean;
+  toolCall?: {
+    id: string;
+    name: string;
+    args: any;
+  };
+  toolResponse?: {
+    content: any;
+  };
 }
 
 export interface IPromptDef {
