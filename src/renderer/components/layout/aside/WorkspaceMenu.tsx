@@ -21,6 +21,7 @@ import {
   ReceiptSparkles24Regular,
   Settings24Regular,
   SignOut24Regular,
+  CalendarLtr24Regular,
 } from '@fluentui/react-icons';
 import { useTranslation } from 'react-i18next';
 import useAppearanceStore from 'stores/useAppearanceStore';
@@ -67,9 +68,11 @@ export default function WorkspaceMenu({ collapsed }: { collapsed: boolean }) {
   useEffect(() => {
     Mousetrap.bind('mod+,', () => navigate('/settings'));
     Mousetrap.bind('mod+p', () => navigate('/prompts'));
+    Mousetrap.bind('mod+t', () => navigate('/tasks'));
     return () => {
       Mousetrap.unbind('mod+k');
       Mousetrap.unbind('mod+p');
+      Mousetrap.unbind('mod+t');
     };
   }, []);
 
@@ -166,6 +169,14 @@ export default function WorkspaceMenu({ collapsed }: { collapsed: boolean }) {
               }}
             >
               {t('Common.Prompts')}
+            </MenuItem>
+            <MenuItem
+              icon={<CalendarLtr24Regular />}
+              onClick={() => {
+                navigate('/tasks');
+              }}
+            >
+              {t('Common.Tasks')}
             </MenuItem>
             <MenuItem
               icon={<DataUsage24Regular />}

@@ -225,5 +225,17 @@
   "Common.Large": "Large",
   "Common.FontSize": "Font Size",
   "Apperance.ChatFontSize": "Text size in the chat",
-  "Apperance.ColorTheme": "Color Theme"
+  "Apperance.ColorTheme": "Color Theme",
+  "Common.Tasks": "Tasks",
+  "Task.UsePromptTemplate": "Use Prompt Template",
+  "Task.PromptTemplate": "Prompt Template",
+  "Task.SystemMessage": "System Message",
+  "Task.UserMessage": "User Message",
+  "Task.Frequency": "Frequency",
+  "Task.Frequency.Daily": "Daily",
+  "Task.Frequency.Weekly": "Weekly",
+  "Task.Frequency.Monthly": "Monthly",
+  "Task.WeekDay": "Day of Week",
+  "Task.Time": "Time",
+  "Task.Info.Empty": "No tasks yet"
 }

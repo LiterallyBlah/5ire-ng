@@ -225,5 +225,17 @@
   "Common.Large": "较大",
   "Common.FontSize": "字体大小",
   "Apperance.ChatFontSize": "对话字体大小",
-  "Apperance.ColorTheme": "色彩主题"
+  "Apperance.ColorTheme": "色彩主题",
+  "Common.Tasks": "定时任务",
+  "Task.UsePromptTemplate": "使用提示词模板",
+  "Task.PromptTemplate": "提示词模板",
+  "Task.SystemMessage": "系统消息",
+  "Task.UserMessage": "用户消息",
+  "Task.Frequency": "频率",
+  "Task.Frequency.Daily": "每天",
+  "Task.Frequency.Weekly": "每周",
+  "Task.Frequency.Monthly": "每月",
+  "Task.WeekDay": "星期几",
+  "Task.Time": "时间",
+  "Task.Info.Empty": "暂无任务"
 }

@@ -167,6 +167,45 @@ function createTableChatKnowledgeRels() {
     .run();
 }
 
+function createTableTasks() {
+  database
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS "tasks" (
+        "id" text(31) NOT NULL,
+        "name" text NOT NULL,
+        "systemMessage" text,
+        "userMessage" text,
+        "promptTemplateId" text,
+        "frequency" text NOT NULL,
+        "time" text NOT NULL,
+        "weekDay" integer,
+        "dayOfMonth" integer,
+        "createdAt" integer NOT NULL,
+        "updatedAt" integer NOT NULL,
+        "pinedAt" integer DEFAULT NULL,
+        PRIMARY KEY ("id"),
+        FOREIGN KEY ("promptTemplateId") REFERENCES "prompts" ("id") ON DELETE SET NULL
+      )`
+    )
+    .run();
+}
+
+function migrateTasksTable() {
+  try {
+    // Check if pinedAt column exists
+    const columnInfo = database.prepare("PRAGMA table_info(tasks)").all();
+    const pinedAtExists = columnInfo.some((col: any) => col.name === 'pinedAt');
+
+    if (!pinedAtExists) {
+      // Add pinedAt column if it doesn't exist
+      database.prepare("ALTER TABLE tasks ADD COLUMN pinedAt integer DEFAULT NULL").run();
+      logging.info('Added pinedAt column to tasks table');
+    }
+  } catch (error) {
+    logging.error('Error migrating tasks table:', error);
+  }
+}
+
 const initDatabase = database.transaction(() => {
   logging.debug('Init database...');
 
@@ -179,6 +218,8 @@ const initDatabase = database.transaction(() => {
   createTableKnowledgeCollections();
   createTableKnowledgeFiles();
   createTableChatKnowledgeRels();
+  createTableTasks();
+  migrateTasksTable(); // Add this line to run the migration
   logging.info('Database initialized.');
 });
 
@@ -189,9 +230,13 @@ ipcMain.handle('db-all', (event, data) => {
   const { sql, params } = data;
   logging.debug('db-all', sql, params);
   try {
-    return database.prepare(sql).all(params);
+    const result = database.prepare(sql).all(params);
+    logging.debug('db-all result:', result);
+    return result;
   } catch (err: any) {
+    logging.error('Error in db-all:', err);
     logging.captureException(err);
+    throw err;
   }
 });
 
@@ -202,6 +247,7 @@ ipcMain.handle('db-run', (_, data) => {
     database.prepare(sql).run(params);
     return true;
   } catch (err: any) {
+    logging.error('Error in db-run:', err);
     logging.captureException(err);
     return false;
   }

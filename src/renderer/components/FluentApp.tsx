@@ -29,6 +29,8 @@ import Prompts from '../pages/prompt';
 import PromptForm from '../pages/prompt/Form';
 import AppLoader from '../apps/Loader';
 import { useTranslation } from 'react-i18next';
+import Tasks from '../pages/task';
+import TaskForm from '../pages/task/TaskForm';
 
 const debug = Debug('5ire:components:FluentApp');
 
@@ -136,6 +138,8 @@ export default function FluentApp() {
               <Route path="/prompts" element={<Prompts />} />
               <Route path="/prompts/form/:id?" element={<PromptForm />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/tasks" element={<Tasks />} />
+              <Route path="/tasks/form/:id?" element={<TaskForm />} />
             </Routes>
           </main>
         </div>
