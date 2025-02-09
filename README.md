@@ -18,25 +18,32 @@
 
 ## 🎯 Features
 
-### 🔄 Ollama Model Integration
+### 🔄 Ollama Integration
 - **Auto-detection of local Ollama models** – no manual configuration required
 - **Simple model switching** via dropdown in the chat UI
 - **Streamlined chat experience** with local AI models
-- **Dynamic tool support detection** (green indicator for supported tools)
-- **Sync button** for model state synchronisation
+- **Dynamic tool support detection** with visual indicators
+- **Model state synchronisation** via dedicated sync button
+- **Tool support** for private operations
 
-### Other Improvements
-- Check the roadmap for more specific changes/improvements
+### 🛠️ Dradis MCP Integration
+- **Project Management** - Create and manage security assessment projects
+- **Vulnerability Management** - Track and document security findings
+- **Content Control** - Manage assessment content and documentation
+- **Document Control** - Version control and document management
+- **Direct Integration** with 5ire-ng interface
 
-### 📖 Core 5ire Features
-- All the original features from 5ire, including:
-  - Conversation management
-  - Basic chat functionality
-  - Simple and intuitive UI
-  - Knowledge base
-  - Prompt library
-  - Many more models
-  - Bookmarks
+### 💡 AI Capabilities
+- **Thought Process Visibility** - View AI's thinking process with expandable sections
+- **Enhanced Tool Interactions** - Clear display of tool inputs and outputs in chat
+- **Smart Context Handling** - Improved conversation management
+
+### 🧰 Utility Features
+- **Batch Operations** - Delete all chats/messages with a single click
+- **Knowledge Base Management**
+- **Prompt Library**
+- **Conversation Bookmarking**
+- **Multiple Model Support**
 
 ## 📦 Development Installation
 
@@ -99,11 +106,11 @@ The application should now be running in development mode.
   - Show tool input and output in the chat interface
 - **General Improvements**
   - Add a delete all chats/messages button
-
+  - AI thinking handling
+  
 ### 🔄 In Progress (Weeks 1-3)
 - **MCP Improvements**
   - Add MCP via the frontend
-  - AI thinking handling
 - **Investment Integration**
   - Implement IBKR MCP tool for investment tracking
   - Portfolio updates and P&L summaries
