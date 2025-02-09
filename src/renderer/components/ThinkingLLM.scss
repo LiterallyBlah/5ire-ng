@@ -1,0 +1,33 @@
+.thinking-llm {
+  margin: 1rem 0;
+  
+  .thinking-toggle {
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.9em;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .thinking-content {
+    margin-top: 0.5rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.03);
+    border-left: 3px solid #666;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #666;
+
+    p {
+      margin: 0.5em 0;
+      line-height: 1.4;
+    }
+  }
+}

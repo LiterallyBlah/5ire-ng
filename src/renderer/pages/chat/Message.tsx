@@ -15,6 +15,7 @@ import ToolSpinner from 'renderer/components/ToolSpinner';
 import useSettingsStore from 'stores/useSettingsStore';
 import ErrorBoundary from 'renderer/components/ErrorBoundary';
 import ToolInteraction from 'renderer/components/ToolInteraction';
+import ThinkingLLM from 'renderer/components/ThinkingLLM';
 
 const debug = Debug('5ire:pages:chat:Message');
 
@@ -136,18 +137,17 @@ export default function Message({ message }: {
 
     return (
       <div className="msg-reply-content">
-        {/* Main reply content */}
+        <ThinkingLLM content={message.reply} />
         <div
           className={`mt-1 break-all ${fontSize === 'large' ? 'font-lg' : ''}`}
           dangerouslySetInnerHTML={{
-            __html: render(`${highlight(message.reply, keyword)}` || ''),
+            __html: render(`${highlight(message.reply.replace(/<think>[\s\S]*?<\/think>/g, ''), keyword)}` || ''),
           }}
         />
         
         {/* Tool interactions */}
         {message.toolInteractions && message.toolInteractions.length > 0 && (
           <div className="tool-interactions mt-4">
-            {/* <Divider>{t('Common.ToolInteractions')}</Divider> */}
             {message.toolInteractions.map((interaction, index) => (
               <ToolInteraction 
                 key={`${message.id}-tool-${index}`}
