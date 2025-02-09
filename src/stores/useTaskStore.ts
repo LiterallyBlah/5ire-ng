@@ -1,14 +1,19 @@
 import { create } from 'zustand';
 import { Task, TaskSchedule, TaskFrequency } from 'types/task';
 import { date2unix } from 'utils/util';
+import { TaskService } from 'intellichat/services/TaskService';
 
 interface TaskStore {
   tasks: Task[];
+  taskService: TaskService;
   createTask: (task: Partial<Task>) => Promise<void>;
   updateTask: (id: string, task: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   fetchTasks: (params?: { keyword?: string }) => Promise<void>;
   getTask: (id: string) => Promise<Task>;
+  initializeTaskScheduling: () => void;
+  rescheduleTask: (id: string) => Promise<void>;
+  stopTask: (id: string) => Promise<void>;
 }
 
 interface DBTaskRow {
@@ -27,11 +32,14 @@ interface DBTaskRow {
   pinedAt: number | null;
 }
 
+const taskService = new TaskService();
+
 const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
+  taskService,
 
   async createTask(task) {
-    const now = date2unix(new Date());
+    const now = Math.floor(Date.now() / 1000); // Use current Unix timestamp
     const newTask: Task = {
       id: crypto.randomUUID(),
       name: task.name || '',
@@ -53,6 +61,7 @@ const useTaskStore = create<TaskStore>((set, get) => ({
         id, name, systemMessage, userMessage, promptTemplateId,
         frequency, time, weekDay, dayOfMonth, createdAt, updatedAt
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+
       [
         newTask.id,
         newTask.name,
@@ -75,6 +84,9 @@ const useTaskStore = create<TaskStore>((set, get) => ({
 
     console.log('Task created successfully');
     set((state) => ({ tasks: [...state.tasks, newTask] }));
+    
+    // Schedule the new task
+    taskService.scheduleTask(newTask);
   },
 
   async updateTask(id, taskUpdate) {
@@ -118,7 +130,7 @@ const useTaskStore = create<TaskStore>((set, get) => ({
 
     if (updates.length) {
       updates.push('updatedAt = ?');
-      values.push(date2unix(new Date()));
+      values.push(Math.floor(Date.now() / 1000)); // Use current Unix timestamp
       values.push(id);
 
       const ok = await window.electron.db.run(
@@ -130,10 +142,17 @@ const useTaskStore = create<TaskStore>((set, get) => ({
         throw new Error('Failed to update task');
       }
 
+      const updatedTask = get().tasks.find(t => t.id === id);
+      if (updatedTask) {
+        // Stop and reschedule the task with new settings
+        taskService.stopTask(id);
+        taskService.scheduleTask({ ...updatedTask, ...taskUpdate } as Task);
+      }
+
       set(state => ({
         tasks: state.tasks.map(task =>
           task.id === id
-            ? { ...task, ...taskUpdate, updatedAt: new Date().toISOString() }
+            ? { ...task, ...taskUpdate, updatedAt: Math.floor(Date.now() / 1000).toString() }
             : task
         )
       }));
@@ -150,13 +169,15 @@ const useTaskStore = create<TaskStore>((set, get) => ({
       throw new Error('Failed to delete task');
     }
 
+    // Stop scheduling for deleted task
+    taskService.stopTask(id);
     set(state => ({
       tasks: state.tasks.filter(task => task.id !== id)
     }));
   },
 
   async fetchTasks({ keyword = '' } = {}) {
-    console.log('Fetching tasks with keyword:', keyword);
+    console.log('[TaskStore] Fetching tasks with keyword:', keyword);
     
     try {
       // Check database connection
@@ -191,31 +212,50 @@ const useTaskStore = create<TaskStore>((set, get) => ({
         throw new Error(`Unexpected results format: ${typeof results}`);
       }
 
-      const tasks = results.map((row: DBTaskRow) => ({
-        id: row.id,
-        name: row.name,
-        systemMessage: row.systemMessage,
-        userMessage: row.userMessage,
-        promptTemplateId: row.promptTemplateId || undefined,
-        schedule: {
-          frequency: row.frequency,
-          time: row.time,
-          weekDay: row.weekDay || undefined,
-          dayOfMonth: row.dayOfMonth || undefined,
-        },
-        createdAt: row.createdAt.toString(),
-        updatedAt: row.updatedAt.toString(),
-        pinedAt: row.pinedAt,
-      }));
+      const tasks = results.map((row: DBTaskRow) => {
+        // Ensure time is in HH:mm format
+        const [hours, minutes] = row.time.split(':').map(Number);
+        const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+        return {
+          id: row.id,
+          name: row.name,
+          systemMessage: row.systemMessage,
+          userMessage: row.userMessage,
+          promptTemplateId: row.promptTemplateId || undefined,
+          schedule: {
+            frequency: row.frequency,
+            time: formattedTime,
+            weekDay: row.weekDay || undefined,
+            dayOfMonth: row.dayOfMonth || undefined,
+          },
+          createdAt: row.createdAt.toString(),
+          updatedAt: row.updatedAt.toString(),
+          pinedAt: row.pinedAt,
+        };
+      });
+
+      console.log('[TaskStore] Mapped tasks:', tasks);
 
       // Only update state if tasks have changed
       if (JSON.stringify(tasks) !== JSON.stringify(get().tasks)) {
         set({ tasks });
+        
+        // Re-schedule all tasks after fetching
+        tasks.forEach(task => {
+          if (task && task.id) {
+            console.log(`[TaskStore] Re-scheduling task ${task.id}`);
+            // Stop any existing schedule first
+            taskService.stopTask(task.id);
+            // Schedule with updated data
+            taskService.scheduleTask(task);
+          }
+        });
       }
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error('[TaskStore] Error fetching tasks:', error);
       set({ tasks: [] });
-      throw error; // Re-throw the error to be caught by the component
+      throw error;
     }
   },
 
@@ -237,6 +277,10 @@ const useTaskStore = create<TaskStore>((set, get) => ({
       throw new Error('Task not found');
     }
 
+    // Ensure time is in HH:mm format
+    const [hours, minutes] = result.time.split(':').map(Number);
+    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
     const task: Task = {
       id: result.id,
       name: result.name,
@@ -245,7 +289,7 @@ const useTaskStore = create<TaskStore>((set, get) => ({
       promptTemplateId: result.promptTemplateId || undefined,
       schedule: {
         frequency: result.frequency,
-        time: result.time,
+        time: formattedTime,
         weekDay: result.weekDay || undefined,
         dayOfMonth: result.dayOfMonth || undefined,
       },
@@ -256,6 +300,29 @@ const useTaskStore = create<TaskStore>((set, get) => ({
 
     return task;
   },
+
+  initializeTaskScheduling() {
+    const tasks = get().tasks;
+    if (tasks && tasks.length > 0) {
+      tasks.forEach(task => {
+        if (task && task.id) {  // Only schedule valid tasks
+          taskService.scheduleTask(task);
+        }
+      });
+    }
+  },
+
+  async rescheduleTask(id: string) {
+    const success = await window.electron.tasks.reschedule(id);
+    if (!success) {
+      throw new Error('Failed to reschedule task');
+    }
+  },
+
+  async stopTask(id: string) {
+    await window.electron.tasks.stop(id);
+  }
+
 }));
 
 export default useTaskStore;

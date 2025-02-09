@@ -8,11 +8,11 @@ interface ThinkingLLMProps {
 export default function ThinkingLLM({ content }: ThinkingLLMProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!content.includes('<think>')) return null;
+  // Add safety checks for null/undefined content
+  if (!content || typeof content !== 'string' || !content.includes('<think>')) return null;
 
-  const thinkingContent = content
-    .match(/<think>([\s\S]*?)<\/think>/)?.[1]
-    .trim();
+  const thinkingMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+  const thinkingContent = thinkingMatch?.[1]?.trim();
 
   if (!thinkingContent) return null;
 

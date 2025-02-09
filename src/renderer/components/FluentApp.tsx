@@ -12,6 +12,13 @@ import {
 } from '@fluentui/react-components';
 import useSettingsStore from '../../stores/useSettingsStore';
 import useAppearanceStore from '../../stores/useAppearanceStore';
+import useAuthStore from 'stores/useAuthStore';
+import useMCPStore from 'stores/useMCPStore';
+import useKnowledgeStore from 'stores/useKnowledgeStore';
+import useToast from 'hooks/useToast';
+import useTaskExecution from 'hooks/useTaskExecution';
+import { useTranslation } from 'react-i18next';
+import Mousetrap from 'mousetrap';
 import AppHeader from './layout/AppHeader';
 import AppSidebar from './layout/aside/AppSidebar';
 import Chat from '../pages/chat';
@@ -28,7 +35,6 @@ import Settings from '../pages/settings';
 import Prompts from '../pages/prompt';
 import PromptForm from '../pages/prompt/Form';
 import AppLoader from '../apps/Loader';
-import { useTranslation } from 'react-i18next';
 import Tasks from '../pages/task';
 import TaskForm from '../pages/task/TaskForm';
 
@@ -61,7 +67,6 @@ const darkTheme: Theme = {
   ...createDarkTheme(fire),
 };
 
-darkTheme.colorBrandForeground1 = fire[120];
 darkTheme.colorBrandForeground2 = fire[130];
 
 export default function FluentApp() {
@@ -70,6 +75,45 @@ export default function FluentApp() {
   const theme = useAppearanceStore((state) => state.theme);
   const language = useSettingsStore((state) => state.language);
   const setTheme = useAppearanceStore((state) => state.setTheme);
+  const loadAuthData = useAuthStore((state) => state.load);
+  const setSession = useAuthStore((state) => state.setSession);
+  const { setActiveServerNames } = useMCPStore();
+  const { onAuthStateChange } = useAuthStore();
+  const { notifyError } = useToast();
+  const { t } = useTranslation();
+  const { createFile } = useKnowledgeStore();
+
+  useEffect(() => {
+    loadAuthData();
+    Mousetrap.prototype.stopCallback = () => {
+      return false;
+    };
+    const subscription = onAuthStateChange();
+
+    window.electron.ipcRenderer.on(
+      'mcp-server-loaded',
+      async (serverNames: any) => {
+        debug('🚩 MCP Server Loaded:', serverNames);
+        setActiveServerNames(serverNames);
+      }
+    );
+
+    window.electron.ipcRenderer.on('sign-in', async (authData: any) => {
+      if (authData.accessToken && authData.refreshToken) {
+        try {
+          await setSession(authData);
+        } catch (err: any) {
+          notifyError(t('Error.Login'));
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      window.electron.ipcRenderer.unsubscribeAll('mcp-server-loaded');
+      window.electron.ipcRenderer.unsubscribeAll('sign-in');
+    };
+  }, []);
 
   useEffect(() => {
     window.electron.ipcRenderer.on('native-theme-change', (_theme: unknown) => {

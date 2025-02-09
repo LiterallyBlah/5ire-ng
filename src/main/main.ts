@@ -12,8 +12,11 @@ import {
   shell,
   ipcMain,
   nativeTheme,
+  Notification,
 } from 'electron';
 import crypto from 'crypto';
+import { Task, TaskFrequency } from '../types/task';
+import { IChat } from '../intellichat/types';
 dotenv.config({
   path: app.isPackaged
     ? path.join(process.resourcesPath, '.env')
@@ -41,7 +44,8 @@ import {
 } from '../consts';
 import { IMCPConfig } from 'stores/useMCPStore';
 import mcpConfig from '../mcp.config';
-
+import { TaskService } from 'intellichat/services/TaskService';
+import Database from 'better-sqlite3';
 logging.init();
 
 logging.info('Main process start...');
@@ -61,6 +65,30 @@ if (!gotTheLock) {
 
 const mcp = new ModuleContext();
 const store = new Store();
+const taskService = new TaskService();
+const tasksDb = {
+  chats: [],
+  messages: [],
+};
+
+// Add database reference for task initialization
+const dbPath = path.join(app.getPath('userData'), '5ire.db');
+const database = new Database(dbPath);
+
+interface DBTaskRow {
+  id: string;
+  name: string;
+  systemMessage: string;
+  userMessage: string;
+  promptTemplateId: string | null;
+  frequency: TaskFrequency;
+  time: string;
+  weekDay: number | null;
+  dayOfMonth: number | null;
+  createdAt: number;
+  updatedAt: number;
+  pinedAt: number | null;
+}
 
 class AppUpdater {
   constructor() {
@@ -432,12 +460,163 @@ ipcMain.handle('get-user-data-path', (_, segments: string[] = []) => {
   return path.join(app.getPath('userData'), ...segments);
 });
 
+ipcMain.handle('settings:get', (_, key, defaultValue) => {
+  return store.get(key, defaultValue);
+});
+
+ipcMain.handle('settings:set', (_, key, value) => {
+  store.set(key, value);
+});
+
+// Task-related IPC handlers
+ipcMain.handle('reschedule-task', async (_, taskId: string) => {
+  const task = database.prepare(
+    'SELECT * FROM tasks WHERE id = ?'
+  ).get(taskId) as DBTaskRow | undefined;
+
+  if (task) {
+    const mappedTask: Task = {
+      id: task.id,
+      name: task.name,
+      systemMessage: task.systemMessage,
+      userMessage: task.userMessage,
+      promptTemplateId: task.promptTemplateId || undefined,
+      schedule: {
+        frequency: task.frequency,
+        time: task.time,
+        weekDay: task.weekDay || undefined,
+        dayOfMonth: task.dayOfMonth || undefined
+      },
+      createdAt: task.createdAt.toString(),
+      updatedAt: task.updatedAt.toString(),
+      pinedAt: task.pinedAt
+    };
+    taskService.stopTask(taskId);
+    taskService.scheduleTask(mappedTask);
+    return true;
+  }
+  return false;
+});
+
+// ✅ Handle task chat creation
+ipcMain.handle('tasks:createTaskChat', async (_, chat: IChat) => {
+  try {
+    database.prepare(
+      `INSERT INTO chats (id, summary, model, systemMessage, createdAt)
+       VALUES (?, ?, ?, ?, ?)`
+    ).run(chat.id, chat.summary, chat.model, chat.systemMessage, chat.createdAt);
+    return true;
+  } catch (error) {
+    console.error('Failed to create task chat:', error);
+    return false;
+  }
+});
+
+// ✅ Handle task message creation
+ipcMain.handle('tasks:createTaskMessage', async (_, message) => {
+  try {
+    database.prepare(
+      `INSERT INTO messages (id, chatId, prompt, isActive, createdAt)
+       VALUES (?, ?, ?, ?, ?)`
+    ).run(message.id, message.chatId, message.prompt, message.isActive, message.createdAt);
+    return true;
+  } catch (error) {
+    console.error('Failed to create task message:', error);
+    return false;
+  }
+});
+
+// ✅ Notify task completion
+ipcMain.handle('tasks:notifyCompletion', (_, data) => {
+  new Notification({
+    title: `Task "${data.name}" Completed`,
+    body: `A new chat has been created with your task results.`,
+  }).show();
+  return true;
+});
+
+// ✅ Notify task error
+ipcMain.handle('tasks:notifyError', (_, data) => {
+  new Notification({
+    title: `Task "${data.name}" Failed`,
+    body: `Error: ${data.error}`,
+  }).show();
+  return true;
+});
+
+ipcMain.handle('stop-task', (_, taskId: string) => {
+  taskService.stopTask(taskId);
+  return true;
+});
+
 ipcMain.on('show-error-box', (_, { title, content }) => {
   dialog.showErrorBox(title, content);
 });
 
 ipcMain.on('show-message-box', (_, options) => {
   dialog.showMessageBox(options);
+});
+
+// Task execution IPC handlers
+ipcMain.handle('task-execute', async (_, task) => {
+  try {
+    await taskService.executeTask(task);
+    return true;
+  } catch (error) {
+    console.error('Failed to execute task:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('task-create-chat', async (_, chat: IChat) => {
+  try {
+    await database.prepare(
+      `INSERT INTO chats (id, summary, model, systemMessage, createdAt)
+       VALUES (?, ?, ?, ?, ?)`
+    ).run(chat.id, chat.summary, chat.model, chat.systemMessage, chat.createdAt);
+    return true;
+  } catch (error) {
+    console.error('Failed to create task chat:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('task-create-message', async (_, message: { id: string, chatId: string, prompt: string, isActive: number, createdAt: number }) => {
+  try {
+    await database.prepare(
+      `INSERT INTO messages (id, chatId, prompt, isActive, createdAt)
+       VALUES (?, ?, ?, ?, ?)`
+    ).run(message.id, message.chatId, message.prompt, message.isActive, message.createdAt);
+    return true;
+  } catch (error) {
+    console.error('Failed to create task message:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('task-notify-completion', (_, data: { taskId: string, chatId: string, name: string }) => {
+  const notification = new Notification({
+    title: `Task "${data.name}" Executed`,
+    body: `A new chat has been created with your task results.`
+  });
+  notification.show();
+  
+  if (mainWindow) {
+    mainWindow.webContents.send('task-executed', {
+      taskId: data.taskId,
+      chatId: data.chatId
+    });
+  }
+  return true;
+});
+
+ipcMain.handle('task-notify-error', (_, data: { taskId: string, name: string, error: string }) => {
+  const notification = new Notification({
+    title: `Task "${data.name}" Failed`,
+    body: `Error: ${data.error}`
+  });
+  notification.show();
+  return true;
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -486,7 +665,6 @@ const createWindow = async () => {
     minHeight: 600,
     frame: false,
     autoHideMenuBar: true,
-    //trafficLightPosition: { x: 15, y: 18 },
     icon: getAssetPath('icon.png'),
     webPreferences: {
       nodeIntegration: true,
@@ -508,6 +686,10 @@ const createWindow = async () => {
     } else {
       mainWindow.show();
     }
+
+    // Set main window reference in TaskService
+    taskService.setMainWindow(mainWindow);
+
     mcp.init().then(async () => {
       // https://github.com/sindresorhus/fix-path
       const fixPath = (await import('fix-path')).default;
@@ -587,6 +769,33 @@ app
     // Remove this if your app does not use auto updates
     // eslint-disable-next-line
     new AppUpdater();
+
+    // Initialize task scheduling
+    const tasks = database.prepare(
+      `SELECT * FROM tasks ORDER BY updatedAt DESC`
+    ).all() as DBTaskRow[];
+    
+    tasks.forEach((task: DBTaskRow) => {
+      const mappedTask: Task = {
+        id: task.id,
+        name: task.name,
+        systemMessage: task.systemMessage,
+        userMessage: task.userMessage,
+        promptTemplateId: task.promptTemplateId || undefined,
+        schedule: {
+          frequency: task.frequency,
+          time: task.time,
+          weekDay: task.weekDay || undefined,
+          dayOfMonth: task.dayOfMonth || undefined
+        },
+        createdAt: task.createdAt.toString(),
+        updatedAt: task.updatedAt.toString(),
+        pinedAt: task.pinedAt
+      };
+      taskService.scheduleTask(mappedTask);
+    });
+    logging.info(`Initialized ${tasks.length} scheduled tasks`);
+
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
@@ -609,6 +818,15 @@ app
     app.on('before-quit', () => {
       ipcMain.removeAllListeners();
       mcp.close();
+      // Clean up any scheduled tasks
+      if (taskService) {
+        const tasks = database.prepare(
+          'SELECT id FROM tasks'
+        ).all() as { id: string }[];
+        tasks.forEach(task => {
+          taskService.stopTask(task.id);
+        });
+      }
     });
 
     app.on(

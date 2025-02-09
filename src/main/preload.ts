@@ -3,6 +3,7 @@
 
 import v8 from 'v8';
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { IChat } from 'intellichat/types';
 // 设置文件描述符限制
 if (process.platform !== 'win32') {
   process.setFdLimit(4096);
@@ -27,7 +28,8 @@ export type Channels =
   | 'save-embedding-model-file'
   | 'remove-embedding-model'
   | 'close-app'
-  | 'mcp-server-loaded';
+  | 'mcp-server-loaded'
+  | 'task-execute';  // Add new channel
 
 const electronHandler = {
   store: {
@@ -155,6 +157,37 @@ const electronHandler = {
   ingestEvent: (data: any) => ipcRenderer.invoke('ingest-event', data),
   getUserDataPath: (segments: string[] = []) =>
     ipcRenderer.invoke('get-user-data-path', segments),
+  tasks: {
+    reschedule: (taskId: string) => ipcRenderer.invoke('reschedule-task', taskId),
+    stop: (taskId: string) => ipcRenderer.invoke('stop-task', taskId),
+    onExecute: (callback: (task: any) => void) => {
+      ipcRenderer.on('task-execute', (_, task) => callback(task));
+    },
+    createTaskChat: (chat: IChat) => ipcRenderer.invoke('tasks:createTaskChat', chat),
+    createTaskMessage: (message: { id: string; chatId: string; prompt: string; isActive: number; createdAt: number }) => 
+      ipcRenderer.invoke('tasks:createTaskMessage', message),
+    notifyCompletion: (data: { taskId: string; chatId: string; name: string }) => 
+      ipcRenderer.invoke('tasks:notifyCompletion', data),
+    notifyError: (data: { taskId: string; name: string; error: string }) => 
+      ipcRenderer.invoke('tasks:notifyError', data),
+  },
+  settings: {
+    get: (key: string, defaultValue?: any) => ipcRenderer.invoke('settings:get', key, defaultValue),
+    set: (key: string, value: any) => ipcRenderer.invoke('settings:set', key, value),
+  },
+  providers: {
+    OpenAI: {
+      name: 'OpenAI',
+      chat: {
+        temperature: { default: 0.7, min: 0, max: 2 },
+        maxTokens: { default: null },
+        options: {
+          streamCustomizable: true
+        }
+      }
+    },
+    // Add other providers here with their configs
+  },
   ipcRenderer: {
     sendMessage(channel: Channels, ...args: unknown[]) {
       ipcRenderer.send(channel, ...args);
@@ -189,6 +222,8 @@ const envVars = {
   NODE_ENV: process.env.NODE_ENV,
 };
 contextBridge.exposeInMainWorld('envVars', envVars);
+
+
 
 export type ElectronHandler = typeof electronHandler;
 export type EnvVars = typeof envVars;

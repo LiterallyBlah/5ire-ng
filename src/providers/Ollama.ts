@@ -22,9 +22,14 @@ export interface IOllamaModelsResponse {
 
 let cachedModels: Record<string, IChatModel> = {};
 
-// Load cached models from electron store on initialization
-const storedModels = window.electron.store.get('settings.ollama.models', {});
-cachedModels = storedModels;
+// Lazy initialization of cached models
+function getCachedModels(): Record<string, IChatModel> {
+  if (typeof window !== 'undefined' && Object.keys(cachedModels).length === 0) {
+    const storedModels = window.electron?.store?.get('settings.ollama.models', {});
+    cachedModels = storedModels || {};
+  }
+  return cachedModels;
+}
 
 export async function syncOllamaModels(base: string): Promise<Record<string, IChatModel>> {
   try {
@@ -151,8 +156,9 @@ export default {
     temperature: { min: 0, max: 1, default: 0.9 },
     options: {
       modelCustomizable: false,
+      streamCustomizable: true
     },
-    models: cachedModels, // Use cached models
+    models: getCachedModels(), // Use lazy initialization
   },
   embedding: {
     apiSchema: ['base', 'model'],

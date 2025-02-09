@@ -62,10 +62,12 @@ export default function Message({ message }: {
   const keywords = useChatStore((state: any) => state.keywords);
   const states = useChatStore().getCurState();
   const { showCitation } = useKnowledgeStore();
+
   const keyword = useMemo(
     () => keywords[message.chatId],
     [keywords, message.chatId]
   );
+
   const citedFiles = useMemo(
     () => {
       const parsed = SafeJSONParse(message.citedFiles, []);
@@ -98,7 +100,7 @@ export default function Message({ message }: {
         }
       }
     },
-    [citedChunks, showCitation]
+    [citedChunks, showCitation, t]
   );
 
   const registerCitationClick = useCallback(() => {
@@ -135,13 +137,24 @@ export default function Message({ message }: {
       );
     }
 
+    // Safely process the reply text
+    const processReply = (reply: string | null | undefined) => {
+      if (!reply) return '';
+      try {
+        return reply.replace(/<think>[\s\S]*?<\/think>/g, '');
+      } catch (e) {
+        console.error('Error processing reply:', e);
+        return String(reply);
+      }
+    };
+
     return (
       <div className="msg-reply-content">
-        <ThinkingLLM content={message.reply} />
+        {message.reply && <ThinkingLLM content={message.reply} />}
         <div
           className={`mt-1 break-all ${fontSize === 'large' ? 'font-lg' : ''}`}
           dangerouslySetInnerHTML={{
-            __html: render(`${highlight(message.reply.replace(/<think>[\s\S]*?<\/think>/g, ''), keyword)}` || ''),
+            __html: render(highlight(processReply(message.reply), keyword) || ''),
           }}
         />
         
@@ -159,7 +172,7 @@ export default function Message({ message }: {
         )}
       </div>
     );
-  }, [message, keyword, fontSize, states, render, t]);
+  }, [message, keyword, fontSize, states, render]);
 
   return (
     <ErrorBoundary>
@@ -169,7 +182,6 @@ export default function Message({ message }: {
             id={`prompt-${message.id}`}
             aria-label={`prompt of message ${message.id}`}
           />
-
           <div
             className="msg-prompt my-2 flex flex-start"
             style={{ minHeight: '40px' }}
@@ -180,7 +192,7 @@ export default function Message({ message }: {
                 fontSize === 'large' ? 'font-lg' : ''
               }`}
               dangerouslySetInnerHTML={{
-                __html: render(highlight(message.prompt, keyword) || ''),
+                __html: render(highlight(message.prompt || '', keyword) || ''),
               }}
             />
           </div>

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import useKnowledgeStore from 'stores/useKnowledgeStore';
 import useMCPStore from 'stores/useMCPStore';
 import Mousetrap from 'mousetrap';
+import useLazyEffect from 'hooks/useLazyEffect';
 
 if (window.envVars.NODE_ENV === 'development') {
   Debug.enable('5ire:*');
@@ -80,5 +81,7 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, [loadAuthData, onAuthStateChange]);
-  return <FluentApp />;
+  return (
+    <FluentApp />
+  );
 }

@@ -96,6 +96,25 @@ const configuration: webpack.Configuration = {
     ],
   },
 
+  resolve: {
+    extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
+    modules: [webpackPaths.srcPath, 'node_modules'],
+    // Add Node.js polyfills
+    fallback: {
+      path: false,
+      fs: false,
+      crypto: false,
+      os: false,
+      __dirname: false,
+      util: false,
+      stream: false,
+      buffer: false,
+      events: false,
+      process: false,
+      child_process: false,
+    },
+  },
+
   optimization: {
     minimize: true,
     minimizer: [new TerserPlugin(), new CssMinimizerPlugin()],
@@ -140,6 +159,9 @@ const configuration: webpack.Configuration = {
 
     new webpack.DefinePlugin({
       'process.type': '"renderer"',
+      'process.env.NODE_ENV': JSON.stringify('production'),
+      '__dirname': 'false',
+      '__filename': 'false'
     }),
   ],
   experiments: {
