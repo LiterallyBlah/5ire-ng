@@ -204,12 +204,16 @@ export default {
       command: 'npx',
       description:
         'A Model Context Protocol server that provides integration with Dradis note-taking platform',
-      args: ['-y', 'dradis-mcp'],
+      args: ['-y', '/Users/MichaelAguilera/Tools/Dradis-MCP'],
       env: {
-        'DRADIS_URL': '<url:string:Your Dradis instance URL>',
-        'DRADIS_API_TOKEN': '<token:string:Your Dradis API token>',
-        'DRADIS_DEFAULT_TEAM_ID': '<number:string:Default team ID for project creation>',
-        'DRADIS_DEFAULT_TEMPLATE_ID': '<number:string:Default template ID for project creation>'
+        'DRADIS_URL': 'https://185.94.116.223/',
+        'DRADIS_API_TOKEN': '_KUksLj14GbsyTh9EtkD',
+        'DRADIS_VULNERABILITY_PARAMETERS': 'Title,Description,Solution,References',
+        // 'DRADIS_URL': '<url:string:Your Dradis instance URL>',
+        // 'DRADIS_API_TOKEN': '<token:string:Your Dradis API token>',
+        // 'DRADIS_VULNERABILITY_PARAMETERS': '<param:string:Dradis Vulnerabillity Parameters (Headings)>',
+        // 'DRADIS_DEFAULT_TEAM_ID': '<number:string:Default team ID for project creation>',
+        // 'DRADIS_DEFAULT_TEMPLATE_ID': '<number:string:Default template ID for project creation>'
       },
       isActive: false,
     },

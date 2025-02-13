@@ -29,12 +29,12 @@ export default function ToolInteraction({ toolCall, toolResponse }: ToolInteract
       
       {isExpanded && (
         <div className="mt-2">
-          {/* <div className="tool-details">
+          <div className="tool-details">
             <Text className="tool-label">Tool Details</Text>
             <pre>
               {JSON.stringify(toolCall.toolCall, null, 2)}
             </pre>
-          </div> */}
+          </div>
           
           <div className="tool-response">
             <Text className="tool-label">Response</Text>
